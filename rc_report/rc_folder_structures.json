@@ -1,0 +1,57 @@
+{
+    "": {
+        ".": [
+            "shopee_income",
+            "shopee_order",
+            "shopee_pay"
+        ],
+        "shopee_income": [
+            "BEAUTYADDICT_490889707",
+            "BEAUTYEXPERT_492808501",
+            "BEAUTYPEDIA_494291072",
+            "CORNERBEAUTY_43579390",
+            "PAMELO_402110126",
+            "PAVIOLA_838599322",
+            "RASICO_691779308"
+        ],
+        "shopee_income\\BEAUTYADDICT_490889707": [],
+        "shopee_income\\BEAUTYEXPERT_492808501": [],
+        "shopee_income\\BEAUTYPEDIA_494291072": [],
+        "shopee_income\\CORNERBEAUTY_43579390": [],
+        "shopee_income\\PAMELO_402110126": [],
+        "shopee_income\\PAVIOLA_838599322": [],
+        "shopee_income\\RASICO_691779308": [],
+        "shopee_order": [
+            "BEAUTYADDICT_490889707",
+            "BEAUTYEXPERT_492808501",
+            "BEAUTYPEDIA_494291072",
+            "CORNERBEAUTY_43579390",
+            "PAMELO_402110126",
+            "PAVIOLA_838599322",
+            "RASICO_691779308"
+        ],
+        "shopee_order\\BEAUTYADDICT_490889707": [],
+        "shopee_order\\BEAUTYEXPERT_492808501": [],
+        "shopee_order\\BEAUTYPEDIA_494291072": [],
+        "shopee_order\\CORNERBEAUTY_43579390": [],
+        "shopee_order\\PAMELO_402110126": [],
+        "shopee_order\\PAVIOLA_838599322": [],
+        "shopee_order\\RASICO_691779308": [],
+        "shopee_pay": [
+            "BEAUTYADDICT_490889707",
+            "BEAUTYEXPERT_492808501",
+            "BEAUTYPEDIA_494291072",
+            "CORNERBEAUTY_43579390",
+            "PAMELO_402110126",
+            "PAVIOLA_838599322",
+            "RASICO_691779308"
+        ],
+        "shopee_pay\\BEAUTYADDICT_490889707": [],
+        "shopee_pay\\BEAUTYEXPERT_492808501": [],
+        "shopee_pay\\BEAUTYPEDIA_494291072": [],
+        "shopee_pay\\CORNERBEAUTY_43579390": [],
+        "shopee_pay\\PAMELO_402110126": [],
+        "shopee_pay\\PAVIOLA_838599322": [],
+        "shopee_pay\\RASICO_691779308": []
+    }
+}
