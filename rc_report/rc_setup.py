@@ -16,6 +16,33 @@ shopee_pay_path = [f"rc_raw_file/shopee_pay/{key}/" for key in shopee_store_info
 
 shopee_income_path = [f"rc_raw_file/shopee_income/{key}/" for key in shopee_store_info]
 
+shopee_gdrive_folder = {
+    'rc_raw_file/shopee_income/BEAUTYADDICT_490889707' : '1EkOwVnuKpupZpkJCPizSObQ_7pi8wI12',
+    'rc_raw_file/shopee_income/BEAUTYENTHUSIAST_492800097' : '1uuYhYoil27NwZI9MVWkv0pfbAQ_OgqAv',
+    'rc_raw_file/shopee_income/BEAUTYEXPERT_492808501' : '1yV5ShZ6oyrE2z1kVI5WWoDREYNdb9pBL',
+    'rc_raw_file/shopee_income/BEAUTYPEDIA_494291072' : '1mefdL1aC4N3XFZMOE-5t-h9vdsR6Gh6I',
+    'rc_raw_file/shopee_income/CORNERBEAUTY_43579390' : '17Ft8kky9rhYAwjV1M8ifNZyQHfnjO2Wu',
+    'rc_raw_file/shopee_income/PAMELO_402110126' : '11MdKfhYwNIqFDCBhxkW9L2kQvZlD4pov',
+    'rc_raw_file/shopee_income/PAVIOLA_838599322' : '1aoEcvHxkWlIBJmLj74iYkqIp5o_wLmSY',
+    'rc_raw_file/shopee_income/RASICO_691779308' : '1tqqQCeol0_JQNHWEYSsgqTEaD64mQXOG',
+    'rc_raw_file/shopee_order/BEAUTYADDICT_490889707' : '1CWjll_IiSN9iWkVLuNf4KRBwJTCCTqXR',
+    'rc_raw_file/shopee_order/BEAUTYENTHUSIAST_492800097' : '1qHfJToDKxPgiQ-DSGn1Mk6mbBkVnk6f8',
+    'rc_raw_file/shopee_order/BEAUTYEXPERT_492808501' : '1SXAwFsngXH31T37eudVlqvxaHbrdqoNe',
+    'rc_raw_file/shopee_order/BEAUTYPEDIA_494291072' : '1kwEj_guhF-6oWB3EMhMYWkKt_41PIHmL',
+    'rc_raw_file/shopee_order/CORNERBEAUTY_43579390' : '1eN6fr7JT9o5hkQ_JVGFr9nTCikxoFV8Z',
+    'rc_raw_file/shopee_order/PAMELO_402110126' : '16GdAHJeg10TD-ofnuOh10kQK_MRmLCD5',
+    'rc_raw_file/shopee_order/PAVIOLA_838599322' : '1TBMqYd_hx3B1hxPVxNuFKsbe1qkDioCl',
+    'rc_raw_file/shopee_order/RASICO_691779308' : '1kcdDK80u5y_DwGPw6YJgWaRjT9IwK1_G',
+    'rc_raw_file/shopee_pay/BEAUTYADDICT_490889707' : '1zp8OcrIMqMO80x8bb0D1qz79KoxbNUie',
+    'rc_raw_file/shopee_pay/BEAUTYENTHUSIAST_492800097' : '1rd-e7aEfI6Qjbacyr2Y2jnzVK0DYnDCd',
+    'rc_raw_file/shopee_pay/BEAUTYEXPERT_492808501' : '14rsDO-oRu24FyhWgG4iAonwkJMshe2x9',
+    'rc_raw_file/shopee_pay/BEAUTYPEDIA_494291072' : '1sEA5B5WbopdOzJCDUl2_9DP6aOZC1BNp',
+    'rc_raw_file/shopee_pay/CORNERBEAUTY_43579390' : '1F1Wav0F8bJQxluSAfVETvxvyRZzeXdl7',
+    'rc_raw_file/shopee_pay/PAMELO_402110126' : '1KXmSiH9E8IrmB3AjD3JyJ-TXoBt13Xlp',
+    'rc_raw_file/shopee_pay/PAVIOLA_838599322' : '1U00Gs0JReY72AET58Tce-FdhfHzKExma',
+    'rc_raw_file/shopee_pay/RASICO_691779308' : '1Sd0AJmNk2YQYqKTA9ijVp08eU6WinPP0',
+}
+
 shopee_wallet_category_mappings = {
     'penggantian dana penuh barang hilang': {
         'simple': 'Penggantian Barang Hilang/Rusak',

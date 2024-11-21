@@ -8,6 +8,7 @@ from pathlib import Path
 
 from google.cloud import bigquery
 from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
 import glob
 import gspread
@@ -141,8 +142,7 @@ def write_table_by_unique_id(df, target_table, write_method, unique_col_ref, dat
 #                         )
 
 # GOOGLE SHEETS & GOOGLE DRIVE
-gs_scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-gs_credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_bi, gs_scope)
+gs_credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_bi, ['https://spreadsheets.google.com/feeds'])
 gs_client = gspread.authorize(gs_credentials)
 
 def read_gsheet(gs_title, sheet_name, first_row=0):
@@ -189,30 +189,20 @@ def write_to_gsheet(dataframe, spreadsheet_id, worksheet_id, gs_client, clear_ol
 
     print(f"DataFrame uploaded successfully to worksheet ID {worksheet_id} in the Google Sheets document.")
 
-def authenticate_from_dict(credentials_dict):
-    scope = ['https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+def authenticate_google_sa(api_name, api_version, scopes):
+    """
+    Authenticate a service account and return the API client service.
 
-    gauth = GoogleAuth()
-    gauth.credentials = credentials
-    return gauth
+    Args:
+        api_name (str): Name of the Google API (e.g., 'drive', 'sheets').
+        api_version (str): Version of the API (e.g., 'v3', 'v4').
+        scopes (list): List of scopes for the API.
 
-def upload_to_drive(filename, folder_id):
-    gauth = authenticate_from_dict(service_account_bi)
-    drive = GoogleDrive(gauth)
-
-    # Create and upload the file to the specified folder
-    file_drive = drive.CreateFile({'title': filename, 'parents': [{'id': folder_id}]})
-    file_drive.SetContentFile(filename)
-    file_drive.Upload()
-
-    # Make the file shareable
-    file_drive.InsertPermission({
-        'type': 'anyone',
-        'value': 'anyone',
-        'role': 'reader'
-    })
-    return file_drive['alternateLink']
+    Returns:
+        googleapiclient.discovery.Resource: The authenticated API service object.
+    """
+    credentials = Credentials.from_service_account_info(service_account_bi, scopes=scopes)
+    return build(api_name, api_version, credentials=credentials)
 
 # TIMESTAMP
 
