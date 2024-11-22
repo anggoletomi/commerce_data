@@ -82,7 +82,7 @@ def upload_file_to_drive(file_path, folder_id, drive_service):
     print(f"\033[1;32mUploaded {file_name} to folder {folder_id} with File ID: {file['id']}\033[0m")
     return file['id']
 
-def sync_local_and_drive_folders(folder_mapping, drive_service):
+def sync_local_to_drive_folders(folder_mapping, drive_service):
 
     total_uploaded = 0
 
@@ -113,14 +113,7 @@ def sync_local_and_drive_folders(folder_mapping, drive_service):
     print(f"\033[1;33mTotal Files Success Upload: {total_uploaded}\033[0m")
     return total_uploaded
 
-if __name__ == '__main__':
-    drive_service = authenticate_google_sa(
-        api_name='drive',
-        api_version='v3',
-        scopes=['https://www.googleapis.com/auth/drive']
-    )
-
-    updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
+def main_local_to_drive():
 
     print(f"\033[1;33mTotal Folders Mapped in the Dictionary: {len(updated_shopee_gdrive_folder)}\033[0m")
     
@@ -133,4 +126,22 @@ if __name__ == '__main__':
     print(f"\033[1;33mDrive Status: {total_drive_files} files.\033[0m")
 
     # Sync the local folders with the corresponding Google Drive folders
-    sync_local_and_drive_folders(updated_shopee_gdrive_folder, drive_service)
+    sync_local_to_drive_folders(updated_shopee_gdrive_folder, drive_service)
+
+
+if __name__ == '__main__':
+    drive_service = authenticate_google_sa(
+        api_name='drive',
+        api_version='v3',
+        scopes=['https://www.googleapis.com/auth/drive']
+    )
+
+    updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
+
+    tasks = [
+        (main_local_to_drive, {})
+    ]
+
+    log_function(tasks)
+
+
