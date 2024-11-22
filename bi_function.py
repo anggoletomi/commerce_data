@@ -16,7 +16,6 @@ import numpy as np
 import sys,os
 import pandas as pd
 import platform
-import psycopg2 as pg
 import re
 import tzlocal
 import shutil
