@@ -9,6 +9,8 @@ from rc_report.rc_setup import *
 
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
+import io
 
 def list_files_in_drive_folder(folder_id, drive_service):
     """
@@ -82,6 +84,30 @@ def upload_file_to_drive(file_path, folder_id, drive_service):
     print(f"\033[1;32mUploaded {file_name} to folder {folder_id} with File ID: {file['id']}\033[0m")
     return file['id']
 
+def download_file_from_drive(file_id, file_name, local_folder, drive_service):
+    """
+    Download a file from Google Drive to a local folder.
+    Args:
+        file_id (str): The ID of the file to download.
+        file_name (str): The name of the file to download.
+        local_folder (str): The path of the local folder where the file will be saved.
+        drive_service: Google Drive service object.
+    """
+    try:
+        request = drive_service.files().get_media(fileId=file_id)
+        local_file_path = os.path.join(local_folder, file_name)
+
+        with io.FileIO(local_file_path, 'wb') as file:
+            downloader = MediaIoBaseDownload(file, request)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+                print(f"\033[1;32mDownloading {file_name}: {int(status.progress() * 100)}%\033[0m")
+        
+        print(f"\033[1;32mDownloaded {file_name} to {local_folder}\033[0m")
+    except HttpError as e:
+        print(f"An error occurred while downloading file {file_name}: {e}")
+
 def sync_local_to_drive_folders(folder_mapping, drive_service):
 
     total_uploaded = 0
@@ -110,8 +136,35 @@ def sync_local_to_drive_folders(folder_mapping, drive_service):
                 upload_file_to_drive(file_path, drive_folder_id, drive_service)
                 total_uploaded += 1
 
-    print(f"\033[1;33mTotal Files Success Upload: {total_uploaded}\033[0m")
+    print(f"\033[1;33mTotal Files Successfully Uploaded: {total_uploaded}\033[0m")
     return total_uploaded
+
+def sync_drive_to_local_folders(folder_mapping, drive_service):
+
+    total_downloaded = 0
+
+    for idx, (local_folder, drive_folder_id) in enumerate(folder_mapping.items(), start=1):
+        if not os.path.exists(local_folder):
+            print(f"{idx}. Local folder not found, creating: {local_folder}")
+            os.makedirs(local_folder)
+        
+        # List all files in the local folder
+        local_files = {
+            os.path.basename(file_path) for file_path in get_all_files_in_local_folder(local_folder)
+        }
+        
+        # List all files in the corresponding Google Drive folder
+        drive_files = list_files_in_drive_folder(drive_folder_id, drive_service)
+        
+        # Compare Drive files with local files and download missing ones
+        for file_name, file_id in drive_files.items():
+            if file_name not in local_files:
+                print(f"{total_downloaded+1}. Syncing folder: Drive folder ID: {drive_folder_id} -> Local folder: {local_folder}")
+                download_file_from_drive(file_id, file_name, local_folder, drive_service)
+                total_downloaded += 1
+
+    print(f"\033[1;33mTotal Files Successfully Downloaded: {total_downloaded}\033[0m")
+    return total_downloaded
 
 def main_local_to_drive():
 
@@ -128,6 +181,19 @@ def main_local_to_drive():
     # Sync the local folders with the corresponding Google Drive folders
     sync_local_to_drive_folders(updated_shopee_gdrive_folder, drive_service)
 
+def main_drive_to_local():
+    print(f"\033[1;33mTotal Folders Mapped in the Dictionary: {len(updated_shopee_gdrive_folder)}\033[0m")
+    
+    # Local status
+    total_local_files = sum(len(get_all_files_in_local_folder(folder)) for folder in updated_shopee_gdrive_folder.keys())
+    print(f"\033[1;33mLocal Status: {total_local_files} files\033[0m")
+
+    # Drive status
+    total_drive_files = sum(len(list_files_in_drive_folder(folder_id, drive_service)) for folder_id in updated_shopee_gdrive_folder.values())
+    print(f"\033[1;33mDrive Status: {total_drive_files} files\033[0m")
+
+    # Sync Drive folders with the corresponding local folders
+    sync_drive_to_local_folders(updated_shopee_gdrive_folder, drive_service)
 
 if __name__ == '__main__':
     drive_service = authenticate_google_sa(
@@ -139,7 +205,8 @@ if __name__ == '__main__':
     updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
 
     tasks = [
-        (main_local_to_drive, {})
+        (main_local_to_drive, {}),
+        (main_drive_to_local, {}),
     ]
 
     log_function(tasks)
