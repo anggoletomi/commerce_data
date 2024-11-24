@@ -124,4 +124,9 @@ shopee_wallet_category_mappings = {
         'english': 'Order Adjustment',
         'database': 'order_adjustment'
     },
+    'penyesuaian saldo penjual karena kekurangan ongkir pengembalian': {
+        'simple': 'Penyesuaian Saldo Penjual - Kurang Ongkir Pengembalian',
+        'english': 'Seller Balance Adjustment for Return Shipping Shortfall',
+        'database': 'seller_balance_adjustment_return_shipping'
+    },
 }
