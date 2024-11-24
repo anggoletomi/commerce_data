@@ -167,6 +167,9 @@ def sync_drive_to_local_folders(folder_mapping, drive_service):
     return total_downloaded
 
 def main_local_to_drive():
+    drive_service = authenticate_google_sa(api_name='drive',api_version='v3',scopes=['https://www.googleapis.com/auth/drive'])
+
+    updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
 
     print(f"\033[1;33mTotal Folders Mapped in the Dictionary: {len(updated_shopee_gdrive_folder)}\033[0m")
     
@@ -182,6 +185,10 @@ def main_local_to_drive():
     sync_local_to_drive_folders(updated_shopee_gdrive_folder, drive_service)
 
 def main_drive_to_local():
+    drive_service = authenticate_google_sa(api_name='drive',api_version='v3',scopes=['https://www.googleapis.com/auth/drive'])
+
+    updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
+
     print(f"\033[1;33mTotal Folders Mapped in the Dictionary: {len(updated_shopee_gdrive_folder)}\033[0m")
     
     # Local status
@@ -196,17 +203,10 @@ def main_drive_to_local():
     sync_drive_to_local_folders(updated_shopee_gdrive_folder, drive_service)
 
 if __name__ == '__main__':
-    drive_service = authenticate_google_sa(
-        api_name='drive',
-        api_version='v3',
-        scopes=['https://www.googleapis.com/auth/drive']
-    )
-
-    updated_shopee_gdrive_folder = {os.path.join(os.getenv("BASE_RAW_FILE_PATH"), key): value for key, value in shopee_gdrive_folder.items()}
-
+    
     tasks = [
         (main_local_to_drive, {}),
-        (main_drive_to_local, {}),
+        # (main_drive_to_local, {}),
     ]
 
     log_function(tasks)
