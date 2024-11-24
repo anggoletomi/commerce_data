@@ -342,33 +342,106 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
                                 unique_col_ref = ['order_number','folder_id']
                                 )
         
-def withdrawn_last_month(report_month,folder_id):
+def check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id,include_current_month=True):
+
+    n = 12 # how many last month to take
+    prev_month_list = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(1, n+1)]
 
     previous_month = (datetime.strptime(report_month, '%Y%m').replace(day=1) - timedelta(days=1)).strftime('%Y%m')
+
+    query = f'''WITH all_month_wallet AS (
+        SELECT DISTINCT month_wallet
+        FROM `bi-gbq.rc_report.sp_pay_wallet`
+        WHERE folder_id = '{folder_id}'
+        AND month_wallet IN {tuple(prev_month_list)}
+    ),
+    month_with_penarikan_dana AS (
+        SELECT DISTINCT month_wallet, 'Yes' AS penarikan_dana_flag
+        FROM `bi-gbq.rc_report.sp_pay_wallet`
+        WHERE folder_id = '{folder_id}'
+        AND LOWER(description) LIKE '%penarikan dana%'
+    )
+    SELECT 
+        a.month_wallet,
+        COALESCE(m.penarikan_dana_flag, 'No') AS penarikan_dana_flag
+    FROM all_month_wallet AS a
+    LEFT JOIN month_with_penarikan_dana AS m
+    ON a.month_wallet = m.month_wallet
+    ORDER BY a.month_wallet'''
+
+    df = read_from_gbq(BI_CLIENT,query)
+
+    # Initialize an empty list to store the result
+    result = []
+    
+    # Start from the last row and move upwards
+    for index in range(len(df) - 1, -1, -1):
+        # Get the current row values
+        row = df.iloc[index]
+        month_wallet = row['month_wallet']
+        penarikan_dana_flag = row['penarikan_dana_flag']
+        
+        # Check the penarikan_dana_flag
+        if penarikan_dana_flag == 'Yes':
+            # If 'Yes' is encountered, stop the operation
+            break
+        elif penarikan_dana_flag == 'No':
+            # Append the current month_wallet to the result
+            result.append(month_wallet)
+    
+    if len(result) == 0:
+        if include_current_month:
+            return report_month
+        else:
+            return previous_month
+    else:
+        min_month = min(result)
+        prev_min_month = (datetime.strptime(min_month, '%Y%m').replace(day=1) - timedelta(days=1)).strftime('%Y%m')
+        result.append(prev_min_month)
+        if include_current_month:
+            result.append(report_month)
+        return tuple(result)
+        
+def withdrawn_last_month(report_month,folder_id):
+
+    no_withdrawn_in_a_month = check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id)
+    before_this_month_excluded = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(1, 13)]
+    before_this_month_included = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(0, 13)]
+
+    if isinstance(no_withdrawn_in_a_month, str):
+        month_wallet_condition = f"month_wallet = '{no_withdrawn_in_a_month}'"
+    elif isinstance(no_withdrawn_in_a_month, tuple):
+        month_wallet_condition = f"month_wallet IN {tuple(no_withdrawn_in_a_month)}"
+
+    # We use a list of months instead of only the previous month because there are cases
+    # where an order is recorded in the wallet as sales after a delay.
+    # For example, an order might be created in May 2024, with no wallet data for it in May 2024 or June 2024,
+    # but it only appears in the wallet data in July 2024. Therefore, we need to check 'Piutang' (accounts receivable) from the last few months.
 
     query = f'''
         WITH order_income AS (
             SELECT *
             FROM `bi-gbq.rc_report.rpt_sp_journal_order` AS income_data
-            WHERE month_income = '{report_month}'
+            WHERE month_income IN {tuple(before_this_month_included)}
             AND folder_id = '{folder_id}'
             AND EXISTS (
                 SELECT 1
                 FROM `bi-gbq.rc_report.rpt_sp_journal_base` AS order_data
-                WHERE order_data.folder_id = income_data.folder_id
+                WHERE order_data.folder_id = '{folder_id}'
                     AND order_data.order_number = income_data.order_number
-                    AND order_data.month_order = '{previous_month}'
+                    AND order_data.month_order IN {tuple(before_this_month_excluded)}
                     AND order_data.sheet_piutang = 1
-                    AND order_data.folder_id = '{folder_id}'
+                    AND order_data.folder_id = income_data.folder_id
             )
         ),
         wallet_data AS (
             SELECT folder_id, order_number, wp_has_been_withdrawn, wp_this_month_order, wp_described_as_income,
                     sheet_omset, sheet_wp, sheet_piutang
             FROM `bi-gbq.rc_report.rpt_sp_journal_base`
-            WHERE month_wallet = '{report_month}'
+            WHERE {month_wallet_condition}
             AND wp_described_as_income = 1
             AND folder_id = '{folder_id}'
+            AND sheet_piutang = 0
         )
         SELECT 
             order_income.*, 
@@ -386,15 +459,12 @@ def withdrawn_last_month(report_month,folder_id):
             order_income.folder_id = wallet_data.folder_id
             AND order_income.order_number = wallet_data.order_number
     '''
-    # previously it's use LEFT JOIN to wallet_data, 
-    # but we want where the order number in order_income from last month is found within this month wallet data
-    # if want to stick with LEFT JOIN, do drop null using 'month_wallet' as subset later.
-
+    
     try:
         df = read_from_gbq(BI_CLIENT, query)
         
         if df.empty: # Check if the DataFrame is empty
-            print(f"⚠️ withdrawn_last_month : no data found for the previous month ({previous_month}) and folder index ({folder_id})")
+            print(f"⚠️ withdrawn_last_month : no data found for the previous month ({no_withdrawn_in_a_month}) and folder index ({folder_id})")
             print('-------------------------------------------------------------------------------')
             return pd.DataFrame()
     except Exception as e:
@@ -409,6 +479,16 @@ def withdrawn_last_month(report_month,folder_id):
     # Add Report Month
     df['report_month'] = report_month
 
+    # Further processing for multiple wallet (no_withdrawn_in_a_month is a tuple)
+
+    if isinstance(no_withdrawn_in_a_month, tuple):
+        earliest_month_wallet = min(no_withdrawn_in_a_month)
+
+        df_earliest = df[(df['month_wallet'] == earliest_month_wallet) & (df['sheet_piutang'] == 1)]
+        df_others = df[df['month_wallet'] != earliest_month_wallet]
+
+        df = pd.concat([df_earliest, df_others], ignore_index=True)
+
     # Arrange Column Order
 
     journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base` LIMIT 1')
@@ -420,11 +500,24 @@ def withdrawn_last_month(report_month,folder_id):
     return df_filtered
 
 def pending_last_month(report_month,folder_id,month_col_ref):
-    
-    previous_month = (datetime.strptime(report_month, '%Y%m').replace(day=1) - timedelta(days=1)).strftime('%Y%m')
+
+    month_list = check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id,include_current_month=False)
+
+    if isinstance(month_list, str):
+        month_wallet_condition = f"month_wallet = '{month_list}'"
+    elif isinstance(month_list, tuple):
+        month_wallet_condition = f"month_wallet IN {tuple(month_list)}"
+
+    # Check whether in the report_month there is a withdrawal activity
+    count_withdrawal = read_from_gbq(BI_CLIENT,f'''SELECT count(1) FROM `bi-gbq.rc_report.rpt_sp_journal_base`
+    WHERE month_wallet = '{report_month}' AND folder_id = '{folder_id}'
+    AND LOWER(w_description) LIKE '%penarikan dana%' ''')
+
+    if count_withdrawal.iloc[0, 0] == 0:
+        return pd.DataFrame()
     
     query = f'''SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base`
-                    WHERE ({month_col_ref} = '{previous_month}')
+                WHERE ({month_wallet_condition})
                       AND (wp_has_been_withdrawn = 0)
                       AND (folder_id = '{folder_id}')'''
     
@@ -432,7 +525,7 @@ def pending_last_month(report_month,folder_id,month_col_ref):
         df = read_from_gbq(BI_CLIENT, query)
         # Check if the DataFrame is empty
         if df.empty:
-            print(f"⚠️ pending_last_month : no data found for the previous month ({previous_month}), folder index ({folder_id}), and month_col_ref ({month_col_ref})")
+            print(f"⚠️ pending_last_month : no data found for the previous month ({month_list}), folder index ({folder_id})")
             print('-------------------------------------------------------------------------------')
             return pd.DataFrame()
     except Exception as e:
@@ -446,6 +539,10 @@ def pending_last_month(report_month,folder_id,month_col_ref):
 
     # Add Report Month
     df['report_month'] = report_month # update the report_month because this going to be use as journal this month
+
+    # Filter Data
+
+    df = df[df[month_col_ref].notnull()]
 
     # Arrange Column Order
 
@@ -539,9 +636,9 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     ######################################################################################################
 
-    withdrawn_last_month_income = withdrawn_last_month(report_month,folder_id)
     pending_last_month_income = pending_last_month(report_month,folder_id,month_col_ref='month_income')
-
+    withdrawn_last_month_income = withdrawn_last_month(report_month,folder_id)
+    
     last_month_income = pd.concat([withdrawn_last_month_income,pending_last_month_income])
 
     if len(last_month_income) > 0:
@@ -609,20 +706,20 @@ if __name__ == '__main__':
 
     tasks = [
         # 1. Create Journal Order
-        (create_journal_base, {'journal_base': False, 'start_date': '2024-06-01', 'db_method': 'replace', 'transform' : False}),
+        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : False}),
 
-        # 2. Create Journal Transform
-        (create_journal_base, {'journal_base': False, 'start_date': '2024-06-01', 'db_method': 'replace', 'transform' : True}),
+        # 2. Create Journal Order Transform
+        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : True}),
     ]
 
     # 3. Create Journal Base (looped)
     for folder in shopee_store_info.keys():
-        for month in ['202406', '202407']:
+        for month in ['202401', '202402', '202403', '202404', '202405', '202406', '202407','202408','202409','202410','202411','202412']:
             tasks.append((create_journal_base, {'journal_base': True, 'data_month': month, 'folder_id': folder, 'db_method': 'append', 'transform' : False}))
 
     # 4. Create Journal Dashboard (looped)
     for folder in shopee_store_info.keys():
-        for month in ['202406', '202407']:
+        for month in ['202401', '202402', '202403', '202404', '202405', '202406', '202407','202408','202409','202410','202411','202412']:
             tasks.append((create_journal_dashboard, {'report_month': month, 'folder_id': folder, 'db_method': 'append'}))
 
     # Execute all tasks using log_function
