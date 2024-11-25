@@ -694,9 +694,68 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
     for d in ['o_order_creation_time', 'i_order_creation_time', 'i_fund_release_date', 'w_transaction_date']:
         df_concat[d] = pd.to_datetime(df_concat[d], errors='coerce').dt.tz_localize(None)
 
+    # Mapping All Date
+    before_this_month_included = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(0, 13)]
+
+    map_date = read_from_gbq(BI_CLIENT,f'''SELECT CONCAT(folder_id,order_number) AS uq_id,month_order,month_income,month_wallet,
+                                                    o_order_creation_time, i_fund_release_date, w_transaction_date
+                                            FROM `bi-gbq.rc_report.rpt_sp_journal_order_transform`
+                                            WHERE folder_id = '{folder_id}' AND month_order IN {tuple(before_this_month_included)}
+                                            ''')
+    map_date = map_date.drop_duplicates(subset=['uq_id'])
+
+    map_month_order = map_date.set_index('uq_id')['month_order'].to_dict()
+    map_month_income = map_date.set_index('uq_id')['month_income'].to_dict()
+    map_month_wallet = map_date.set_index('uq_id')['month_wallet'].to_dict()
+    map_o_order_creation_time = map_date.set_index('uq_id')['o_order_creation_time'].to_dict()
+    map_i_fund_release_date =map_date.set_index('uq_id')['i_fund_release_date'].to_dict()
+    map_w_transaction_date = map_date.set_index('uq_id')['w_transaction_date'].to_dict()
+
+    df_concat['uq_id'] = df_concat['folder_id'] + df_concat['order_number']
+
+    df_concat['month_order'] = df_concat['month_order'].fillna(df_concat['uq_id'].map(map_month_order))
+    df_concat['month_income'] = df_concat['month_income'].fillna(df_concat['uq_id'].map(map_month_income))
+    df_concat['month_wallet'] = df_concat['month_wallet'].fillna(df_concat['uq_id'].map(map_month_wallet))
+    df_concat['o_order_creation_time'] = df_concat['o_order_creation_time'].fillna(df_concat['uq_id'].map(map_o_order_creation_time))
+    df_concat['i_fund_release_date'] = df_concat['i_fund_release_date'].fillna(df_concat['uq_id'].map(map_i_fund_release_date))
+    df_concat['w_transaction_date'] = df_concat['w_transaction_date'].fillna(df_concat['uq_id'].map(map_w_transaction_date))
+    
+    df_concat = df_concat.drop(columns=['uq_id'])
+
+    # Create Group
+
+    by_group = ['month_order', 'month_income', 'month_wallet', 'report_month', 'store_id', 'country', 'currency', 'platform', 'store',
+    'folder_id', 'category_1']
+
+    sum_group = ['o_total_product_price', 'i_original_product_price', 'i_total_product_discount',
+    'i_buyer_refund_amount', 'i_shopee_product_discount',
+    'i_seller_borne_voucher_discount', 'i_seller_borne_cashback_coins',
+    'i_shipping_paid_by_buyer', 'i_shipping_discount_borne_by_courier',
+    'i_shopee_free_shipping', 'i_shipping_fees_forwarded_to_courier',
+    'i_return_shipping_cost', 'i_shipping_fee_refund',
+    'i_ams_commission_fee', 'i_administration_fee',
+    'i_service_fee_incl_vat_11_percent', 'i_premium_fee', 'i_program_fee',
+    'i_credit_card_fee', 'i_campaign_fee', 'i_import_vat_income_tax',
+    'i_total_income', 'i_compensation',
+    'i_seller_free_shipping_promo', 'i_refund_to_buyer',
+    'i_pro_rata_coin_refund_for_return',
+    'i_pro_rata_shopee_voucher_for_return',
+    'i_pro_rated_bank_promo_for_return',
+    'i_pro_rated_shopee_promo_for_return',
+    'w_amount', 'value_withdrawn',
+    'value_pending', 'value_total', 'value_debit', 'value_credit']
+
+    df_group = df_concat.groupby(by_group)[sum_group].sum().reset_index()
+
     # Load to GBQ
     
     write_table_by_unique_id(df_concat,
+                                target_table = 'rc_report.rpt_sp_journal_report',
+                                write_method=db_method,
+                                unique_col_ref = ['report_month','folder_id']
+                            )
+    
+    write_table_by_unique_id(df_group,
                                 target_table = 'rc_report.rpt_sp_journal_dashboard',
                                 write_method=db_method,
                                 unique_col_ref = ['report_month','folder_id']

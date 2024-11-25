@@ -129,4 +129,9 @@ shopee_wallet_category_mappings = {
         'english': 'Seller Balance Adjustment for Return Shipping Shortfall',
         'database': 'seller_balance_adjustment_return_shipping'
     },
+    'nominal program cashback pick up spx express': {
+        'simple': 'Cashback Logistik',
+        'english': 'Logistic Cashback',
+        'database': 'logistic_cashback'
+    },
 }
