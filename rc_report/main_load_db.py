@@ -15,9 +15,9 @@ from sp_pay_wallet import sp_pay_wallet
 tasks = [
     (main_drive_to_local, {}),
 
-    (sp_income_released, {'count_file': 100,'db_method': 'replace'}),
-    (sp_order_data, {'count_file': 100,'db_method': 'replace'}),
-    (sp_pay_wallet, {'count_file': 100,'db_method': 'replace'}),
+    (sp_income_released, {'count_file': 1000,'db_method': 'replace'}),
+    (sp_order_data, {'count_file': 1000,'db_method': 'replace'}),
+    (sp_pay_wallet, {'count_file': 1000,'db_method': 'replace'}),
 ]
 
 log_function(tasks)

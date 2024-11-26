@@ -730,17 +730,20 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     # Add Category 2
 
+    df_concat['category_2'] = df_concat['category_1'].str.replace('Previous Month - ','')
+
+    # Add Category 3
+
     conditions = [
         df_concat['category_1'].isin(['Penjualan Kotor (O)', 'Previous Month - Piutang (I)']),
         df_concat['category_1'].isin(['Saldo Iklan (W)', 'Previous Month - Saldo Iklan (W)']),
         df_concat['category_1'].isin(['Beban Ongkir (I)', 'Previous Month - Beban Ongkir (I)']),
         df_concat['category_1'].isin(['Pengembalian Dana (I)', 'Previous Month - Pengembalian Dana (I)']),
         df_concat['category_1'].isin(['Diskon Produk Dari Shopee (I)', 'Previous Month - Diskon Produk Dari Shopee (I)']),
-        df_concat['category_1'].isin([
-            'Biaya AMS (I)', 'Biaya Admin (I)', 'Biaya Layanan (I)', 'Biaya Program (I)',
-            'Previous Month - Biaya AMS (I)', 'Previous Month - Biaya Admin (I)',
-            'Previous Month - Biaya Layanan (I)', 'Previous Month - Biaya Program (I)'
-        ]),
+        df_concat['category_1'].isin(['Biaya AMS (I)','Previous Month - Biaya AMS (I)']),
+        df_concat['category_1'].isin(['Biaya Admin (I)','Previous Month - Biaya Admin (I)']),
+        df_concat['category_1'].isin(['Biaya Layanan (I)','Previous Month - Biaya Layanan (I)']),
+        df_concat['category_1'].isin(['Biaya Program (I)','Previous Month - Biaya Program (I)']),
         df_concat['category_1'] == 'Penarikan Dana (W)',
         df_concat['category_1'] == 'Piutang (O)',
         df_concat['category_1'].str.contains(r'\(W\)', na=False) & ~df_concat['category_1'].isin(['Saldo Iklan (W)', 'Previous Month - Saldo Iklan (W)', 'Penarikan Dana (W)']) & (df_concat['value_total'] > 0),
@@ -748,27 +751,29 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
     ]
 
     choices = [
-        'Total Pendapatan',
+        'Total Penjualan',
         'Saldo Iklan',
         'Beban Ongkir',
         'Pengembalian Dana',
         'Diskon Produk Dari Shopee',
-        'Biaya Shopee',
+        'Biaya AMS',
+        'Biaya Admin',
+        'Biaya Layanan',
+        'Biaya Program',
         'Penarikan Dana',
         'Piutang',
         'Other Wallet Income',
         'Other Wallet Expense'
     ]
 
-    # Use np.select to create the new column
-    df_concat['category_2'] = np.select(conditions, choices, default='Others')
+    df_concat['category_3'] = np.select(conditions, choices, default='Others')
 
     # Add Category 3
 
     conditions = [
-        df_concat['category_2'].isin(['Total Pendapatan','Diskon Produk Dari Shopee','Other Wallet Income']),
-        df_concat['category_2'].isin(['Saldo Iklan','Beban Ongkir','Pengembalian Dana','Biaya Shopee','Other Wallet Expense']),
-        df_concat['category_2'].isin(['Penarikan Dana','Piutang'])
+        df_concat['category_3'].isin(['Total Penjualan','Diskon Produk Dari Shopee','Other Wallet Income']),
+        df_concat['category_3'].isin(['Saldo Iklan','Beban Ongkir','Pengembalian Dana','Biaya AMS','Biaya Admin','Biaya Layanan','Biaya Program','Other Wallet Expense']),
+        df_concat['category_3'].isin(['Penarikan Dana','Piutang'])
     ]
 
     choices = [
@@ -777,13 +782,28 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
         'Others'
     ]
 
-    # Use np.select to create the new column
-    df_concat['category_3'] = np.select(conditions, choices, default='Others')
+    df_concat['category_4'] = np.select(conditions, choices, default='Others')
+
+    # Add New Column
+
+    df_concat['total_penjualan'] = np.where(df_concat['category_3'] == 'Total Penjualan',df_concat['value_total'],0)
+    df_concat['saldo_iklan'] = np.where(df_concat['category_3'] == 'Saldo Iklan',df_concat['value_total'],0)
+    df_concat['beban_ongkir'] = np.where(df_concat['category_3'] == 'Beban Ongkir',df_concat['value_total'],0)
+    df_concat['pengembalian_dana'] = np.where(df_concat['category_3'] == 'Pengembalian Dana',df_concat['value_total'],0)
+    df_concat['diskon_produk_dari_shopee'] = np.where(df_concat['category_3'] == 'Diskon Produk Dari Shopee',df_concat['value_total'],0)
+    df_concat['biaya_ams'] = np.where(df_concat['category_3'] == 'Biaya AMS',df_concat['value_total'],0)
+    df_concat['biaya_admin'] = np.where(df_concat['category_3'] == 'Biaya Admin',df_concat['value_total'],0)
+    df_concat['biaya_layanan'] = np.where(df_concat['category_3'] == 'Biaya Layanan',df_concat['value_total'],0)
+    df_concat['biaya_program'] = np.where(df_concat['category_3'] == 'Biaya Program',df_concat['value_total'],0)
+    df_concat['penarikan_dana'] = np.where(df_concat['category_3'] == 'Penarikan Dana',df_concat['value_total'],0)
+    df_concat['piutang'] = np.where(df_concat['category_3'] == 'Piutang',df_concat['value_total'],0)
+    df_concat['other_wallet_income'] = np.where(df_concat['category_3'] == 'Other Wallet Income',df_concat['value_total'],0)
+    df_concat['other_wallet_expense'] = np.where(df_concat['category_3'] == 'Other Wallet Expense',df_concat['value_total'],0)
 
     # Create Group
 
     by_group = ['month_order', 'month_income', 'month_wallet', 'report_month', 'store_id', 'country', 'currency', 'platform', 'store',
-    'folder_id', 'category_1', 'category_2', 'category_3']
+    'folder_id', 'category_1', 'category_2', 'category_3', 'category_4']
 
     sum_group = ['o_total_product_price', 'i_original_product_price', 'i_total_product_discount',
     'i_buyer_refund_amount', 'i_shopee_product_discount',
@@ -801,7 +821,10 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
     'i_pro_rated_bank_promo_for_return',
     'i_pro_rated_shopee_promo_for_return',
     'w_amount', 'value_withdrawn',
-    'value_pending', 'value_total', 'value_debit', 'value_credit']
+    'value_pending', 'value_total', 'value_debit', 'value_credit',
+    'total_penjualan','saldo_iklan','beban_ongkir','pengembalian_dana',
+    'diskon_produk_dari_shopee','biaya_ams','biaya_admin','biaya_layanan',
+    'biaya_program','penarikan_dana','piutang','other_wallet_income','other_wallet_expense']
 
     df_group = df_concat.groupby(by_group)[sum_group].sum().reset_index()
 
@@ -831,12 +854,12 @@ if __name__ == '__main__':
 
     # 3. Create Journal Base (looped)
     for folder in shopee_store_info.keys():
-        for month in ['202401', '202402', '202403', '202404', '202405', '202406', '202407','202408','202409','202410','202411','202412']:
+        for month in ['202401','202402','202403','202404','202405','202406','202407','202408','202409','202410','202411','202412']:
             tasks.append((create_journal_base, {'journal_base': True, 'data_month': month, 'folder_id': folder, 'db_method': 'append', 'transform' : False}))
 
     # 4. Create Journal Dashboard (looped)
     for folder in shopee_store_info.keys():
-        for month in ['202401', '202402', '202403', '202404', '202405', '202406', '202407','202408','202409','202410','202411','202412']:
+        for month in ['202401','202402','202403','202404','202405','202406','202407','202408','202409','202410','202411','202412']:
             tasks.append((create_journal_dashboard, {'report_month': month, 'folder_id': folder, 'db_method': 'append'}))
 
     # Execute all tasks using log_function

@@ -134,4 +134,29 @@ shopee_wallet_category_mappings = {
         'english': 'Logistic Cashback',
         'database': 'logistic_cashback'
     },
+    'auto-accept without judging': {
+        'simple': 'Auto-accept Without Judging - Campaign',
+        'english': 'Auto-accept Without Judging - Campaign',
+        'database': 'auto_accept_without_judging'
+    },
+    'auto-approve compensation without judging': {
+        'simple': 'Auto-approve Compensation Without Judging',
+        'english': 'Auto-approve Compensation Without Judging',
+        'database': 'auto_approve_compensation_without_judging'
+    },
+    'kompensasi biaya kemasan program garansi bebas pengembalian': {
+        'simple': 'Kompensasi Biaya Kemasan Program Garansi Bebas Pengembalian',
+        'english': 'Packaging Cost Compensation - Free Return Guarantee Program',
+        'database': 'free_return_program_packaging_cost'
+    },
+    'pengembalian dana subsidi harga shopee': {
+        'simple': 'Pengembalian Dana Subsidi Harga Shopee',
+        'english': 'Refund of Shopee Price Subsidy',
+        'database': 'shopee_price_subsidy_refund'
+    },
+    'strong seller evidence': {
+        'simple': 'Strong Seller Evidence',
+        'english': 'Strong Seller Evidence',
+        'database': 'strong_seller_evidence'
+    },
 }
