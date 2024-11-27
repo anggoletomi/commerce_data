@@ -138,11 +138,3 @@ def sp_order_data(count_file,db_method):
                             unique_col_ref = ['folder_id','order_number'],
                             date_col_ref = 'order_creation_time'
                             )
-
-if __name__ == '__main__':
-
-    tasks = [
-        (sp_order_data, {'count_file': 100,'db_method': 'replace'})
-    ]
-
-    log_function(tasks)

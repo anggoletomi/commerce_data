@@ -141,12 +141,4 @@ def sp_income_released(count_file,db_method):
                             unique_col_ref = ['folder_id','order_number'],
                             date_col_ref = 'fund_release_date'
                             )
-
-if __name__ == '__main__':
-
-    tasks = [
-        (sp_income_released, {'count_file': 100,'db_method': 'replace'})
-    ]
-
-    log_function(tasks)
     

@@ -1,12 +1,16 @@
-import os
-import json
 from dotenv import load_dotenv
 load_dotenv()
+
+import sys,os
+sys.path.insert(0, os.getenv("PROJECT_PATH"))
+
+import json
+
+from bi_folder_structures import update_folder_structure
 
 # A. SHOPEE
 shopee_store_info = {}
 
-# Iterate through possible keys
 for i in range(1, 100):
     env_var = f'RC_SHOPEE_STORE_INFO_{i}'
     value = os.getenv(env_var)
@@ -169,3 +173,7 @@ shopee_wallet_category_mappings = {
         'database': 'strong_seller_evidence'
     },
 }
+
+if __name__ == '__main__':
+
+    update_folder_structure(target_path=os.getenv("RC_RAW_FILE_PATH"),structure_file=os.getenv("RC_FOLDER_STRUCTURE_JSON"))

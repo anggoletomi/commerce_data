@@ -1,9 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-import sys,os
-sys.path.insert(0, os.getenv("PROJECT_PATH"))
-
+import os
 import json
 
 def export_folder_structure(base_path, output_file):

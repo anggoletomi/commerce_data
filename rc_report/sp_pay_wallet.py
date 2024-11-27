@@ -81,11 +81,3 @@ def sp_pay_wallet(count_file,db_method):
                             unique_col_ref = ['folder_id','transaction_type','description','order_number','transaction_category'], # need to be optimized, still have duplicate with this combination when append
                             date_col_ref = 'transaction_date'
                             )
-
-if __name__ == '__main__':
-
-    tasks = [
-        (sp_pay_wallet, {'count_file': 100,'db_method': 'replace'})
-    ]
-
-    log_function(tasks)

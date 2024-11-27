@@ -841,26 +841,3 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
                                 write_method=db_method,
                                 unique_col_ref = ['report_month','folder_id']
                             )
-
-if __name__ == '__main__':
-
-    tasks = [
-        # 1. Create Journal Order
-        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : False}),
-
-        # 2. Create Journal Order Transform
-        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : True}),
-    ]
-
-    # 3. Create Journal Base (looped)
-    for folder in shopee_store_info.keys():
-        for month in ['202401','202402','202403','202404','202405','202406','202407','202408','202409','202410','202411','202412']:
-            tasks.append((create_journal_base, {'journal_base': True, 'data_month': month, 'folder_id': folder, 'db_method': 'append', 'transform' : False}))
-
-    # 4. Create Journal Dashboard (looped)
-    for folder in shopee_store_info.keys():
-        for month in ['202401','202402','202403','202404','202405','202406','202407','202408','202409','202410','202411','202412']:
-            tasks.append((create_journal_dashboard, {'report_month': month, 'folder_id': folder, 'db_method': 'append'}))
-
-    # Execute all tasks using log_function
-    log_function(tasks)

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 from openpyxl import load_workbook
@@ -516,3 +517,13 @@ def flexible_categorize_by_description(description, dict_mapping, type='simple',
     # test_var = 'Pemotongan Komisi pemotOngan biaya AMS biaya Komisi'
     # result = flexible_categorize_by_description(test_var, shopee_wallet_category_mappings, type='database', match_type='flexible')
     # print(result)
+
+
+def get_month_list(month_start,month_end,month_format):
+    start_date = datetime.strptime(month_start, month_format)
+    end_date = datetime.strptime(month_end, month_format)
+
+    months = [(start_date + relativedelta(months=i)).strftime(month_format)
+            for i in range((end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1)]
+    
+    return months
