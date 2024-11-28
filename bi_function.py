@@ -135,7 +135,7 @@ def write_table_by_unique_id(df, target_table, write_method, unique_col_ref, dat
 
 # # Example Usage:
 # write_table_by_unique_id(df,
-#                         target_table = 'rc_report.sp_income_released',
+#                         target_table = 'report_rc.sp_income_released',
 #                         write_method='replace',
 #                         unique_col_ref = ['store_id'],
 #                         date_col_ref = 'order_creation_time'
@@ -480,7 +480,7 @@ def flexible_categorize_by_description(description, dict_mapping, type='simple',
          otherwise, the original description is returned unchanged.
     
     Example Usage:
-    shopee_wallet_category_mappings = {
+    rc_shopee_wallet_category_mappings = {
         'penggantian dana penuh barang hilang': {
             'simple': 'Penggantian Barang Hilang/Rusak',
             'english': 'Full Refund for Lost Item',
@@ -491,7 +491,7 @@ def flexible_categorize_by_description(description, dict_mapping, type='simple',
     
     categorized_label = flexible_categorize_by_description(
         description='penggantian dana penuh barang hilang',
-        dict_mapping=shopee_wallet_category_mappings,
+        dict_mapping=rc_shopee_wallet_category_mappings,
         type='database',
         match_type='flexible'
     )
@@ -512,10 +512,10 @@ def flexible_categorize_by_description(description, dict_mapping, type='simple',
 
     return description
 
-    # example usage : df_wallet['wallet_category'] = df_wallet['w_description'].apply(flexible_categorize_by_description, args=(shopee_wallet_category_mappings, 'database', 'strict'))
+    # example usage : df_wallet['wallet_category'] = df_wallet['w_description'].apply(flexible_categorize_by_description, args=(rc_shopee_wallet_category_mappings, 'database', 'strict'))
     # for manual testing without dataframe:
     # test_var = 'Pemotongan Komisi pemotOngan biaya AMS biaya Komisi'
-    # result = flexible_categorize_by_description(test_var, shopee_wallet_category_mappings, type='database', match_type='flexible')
+    # result = flexible_categorize_by_description(test_var, rc_shopee_wallet_category_mappings, type='database', match_type='flexible')
     # print(result)
 
 

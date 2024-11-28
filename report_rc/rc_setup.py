@@ -6,28 +6,26 @@ sys.path.insert(0, os.getenv("PROJECT_PATH"))
 
 import json
 
-from bi_folder_structures import update_folder_structure
-
 # A. SHOPEE
-shopee_store_info = {}
+rc_shopee_store_info = {}
 
 for i in range(1, 100):
-    env_var = f'RC_SHOPEE_STORE_INFO_{i}'
-    value = os.getenv(env_var)
+    rc_env_var = f'RC_SHOPEE_STORE_INFO_{i}'
+    rc_value = os.getenv(rc_env_var)
     
-    if value:
-        store_data = json.loads(value)
-        shopee_store_info.update(store_data)
+    if rc_value:
+        rc_store_data = json.loads(rc_value)
+        rc_shopee_store_info.update(rc_store_data)
     else:
         break
 
-shopee_order_path = [f"rc_raw_file/shopee_order/{key}/" for key in shopee_store_info]
+rc_shopee_order_path = [f"rc_raw_file/shopee_order/{key}/" for key in rc_shopee_store_info]
 
-shopee_pay_path = [f"rc_raw_file/shopee_pay/{key}/" for key in shopee_store_info]
+rc_shopee_pay_path = [f"rc_raw_file/shopee_pay/{key}/" for key in rc_shopee_store_info]
 
-shopee_income_path = [f"rc_raw_file/shopee_income/{key}/" for key in shopee_store_info]
+rc_shopee_income_path = [f"rc_raw_file/shopee_income/{key}/" for key in rc_shopee_store_info]
 
-shopee_gdrive_folder = {
+rc_shopee_gdrive_folder = {
     f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_1")).keys())[0]}' : '1EkOwVnuKpupZpkJCPizSObQ_7pi8wI12',
     f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_2")).keys())[0]}' : '1uuYhYoil27NwZI9MVWkv0pfbAQ_OgqAv',
     f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_3")).keys())[0]}' : '1yV5ShZ6oyrE2z1kVI5WWoDREYNdb9pBL',
@@ -56,7 +54,7 @@ shopee_gdrive_folder = {
     f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_8")).keys())[0]}' : '1Sd0AJmNk2YQYqKTA9ijVp08eU6WinPP0',
 }
 
-shopee_wallet_category_mappings = {
+rc_shopee_wallet_category_mappings = {
     'penggantian dana penuh barang hilang': {
         'simple': 'Penggantian Barang Hilang/Rusak',
         'english': 'Full Refund for Lost Item',
@@ -173,7 +171,3 @@ shopee_wallet_category_mappings = {
         'database': 'strong_seller_evidence'
     },
 }
-
-if __name__ == '__main__':
-
-    update_folder_structure(target_path=os.getenv("RC_RAW_FILE_PATH"),structure_file=os.getenv("RC_FOLDER_STRUCTURE_JSON"))

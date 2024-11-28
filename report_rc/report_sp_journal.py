@@ -5,13 +5,13 @@ import sys,os
 sys.path.insert(0, os.getenv("PROJECT_PATH"))
 
 from bi_function import *
-from rc_report.rc_setup import *
+from report_rc.rc_setup import *
 
 def transform_wallet_data(df):
 
     df_copy = df.copy()
 
-    df_copy['wallet_category'] = df_copy['description'].apply(flexible_categorize_by_description, args=(shopee_wallet_category_mappings, 'database', 'flexible'))
+    df_copy['wallet_category'] = df_copy['description'].apply(flexible_categorize_by_description, args=(rc_shopee_wallet_category_mappings, 'database', 'flexible'))
     df_copy.drop(columns=['transaction_type','description','transaction_category','ending_balance','status'], inplace=True, errors='ignore')
 
     pivot_group = ['folder_id', 'transaction_date', 'order_number']
@@ -75,7 +75,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         query_order = f'''SELECT DATE(order_creation_time) AS order_creation_time,folder_id,order_number,
                             SUM(total_product_price) AS total_product_price
-                    FROM `bi-gbq.rc_report.sp_order_data`
+                    FROM `bi-gbq.report_rc.sp_order_data`
                     WHERE (UPPER(order_status) = 'SELESAI')
                         AND (LENGTH(order_number) > 1)
                         AND (month_order = '{data_month}')
@@ -84,7 +84,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         '''
 
         query_income = f'''SELECT *
-                            FROM `bi-gbq.rc_report.sp_income_released`
+                            FROM `bi-gbq.report_rc.sp_income_released`
                             WHERE (month_income = '{data_month}')
                                 AND (month_order = '{data_month}')
                                 AND (LENGTH(order_number) > 1)
@@ -92,7 +92,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         '''
 
         query_wallet = f'''SELECT *
-                            FROM `bi-gbq.rc_report.sp_pay_wallet`
+                            FROM `bi-gbq.report_rc.sp_pay_wallet`
                             WHERE (month_wallet = '{data_month}')
                                 AND (folder_id = '{folder_id}')
                             ORDER BY transaction_date DESC
@@ -105,16 +105,16 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         query_order = f'''SELECT DATE(order_creation_time) AS order_creation_time,folder_id,order_number,order_status,
                                 SUM(total_product_price) AS total_product_price
-                            FROM `bi-gbq.rc_report.sp_order_data`
+                            FROM `bi-gbq.report_rc.sp_order_data`
                             WHERE (DATE(order_creation_time) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)
                             GROUP BY DATE(order_creation_time),folder_id,order_number,order_status'''
 
-        query_income = f'''SELECT * FROM `bi-gbq.rc_report.sp_income_released`
+        query_income = f'''SELECT * FROM `bi-gbq.report_rc.sp_income_released`
                            WHERE (DATE(order_creation_time) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)'''
 
-        query_wallet = f'''SELECT * FROM `bi-gbq.rc_report.sp_pay_wallet`
+        query_wallet = f'''SELECT * FROM `bi-gbq.report_rc.sp_pay_wallet`
                            WHERE (DATE(transaction_date) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)
                             ORDER BY transaction_date DESC'''
@@ -299,18 +299,18 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         df_order_income_wallet.insert(3, 'report_month', data_month)
 
-        df_order_income_wallet.insert(4, 'store_id', shopee_store_info[folder_id][0])
-        df_order_income_wallet.insert(5, 'country', shopee_store_info[folder_id][1])
-        df_order_income_wallet.insert(6, 'currency', shopee_store_info[folder_id][2])
-        df_order_income_wallet.insert(7, 'platform', shopee_store_info[folder_id][3])
-        df_order_income_wallet.insert(8, 'store', shopee_store_info[folder_id][4])
+        df_order_income_wallet.insert(4, 'store_id', rc_shopee_store_info[folder_id][0])
+        df_order_income_wallet.insert(5, 'country', rc_shopee_store_info[folder_id][1])
+        df_order_income_wallet.insert(6, 'currency', rc_shopee_store_info[folder_id][2])
+        df_order_income_wallet.insert(7, 'platform', rc_shopee_store_info[folder_id][3])
+        df_order_income_wallet.insert(8, 'store', rc_shopee_store_info[folder_id][4])
 
     else:
 
         def add_dim(column_name, dict_position, insert_at=0):
             # Map the dictionary value at the specified position
             new_column = df_order_income_wallet['folder_id'].map(
-                lambda x: shopee_store_info.get(x, [None] * (dict_position + 1))[dict_position]
+                lambda x: rc_shopee_store_info.get(x, [None] * (dict_position + 1))[dict_position]
             )
             # Insert the new column at the desired location
             df_order_income_wallet.insert(insert_at, column_name, new_column)
@@ -325,19 +325,19 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
     
     if journal_base:
         write_table_by_unique_id(df_order_income_wallet,
-                                target_table = 'rc_report.rpt_sp_journal_base',
+                                target_table = 'report_rc.rpt_sp_journal_base',
                                 write_method=db_method,
                                 unique_col_ref = ['report_month','folder_id']
                                 )
     elif not journal_base and not transform:
         write_table_by_unique_id(df_order_income_wallet,
-                                 target_table = 'rc_report.rpt_sp_journal_order',
+                                 target_table = 'report_rc.rpt_sp_journal_order',
                                  write_method=db_method,
                                  unique_col_ref = ['order_number','folder_id']
                                 )
     elif not journal_base and transform:
         write_table_by_unique_id(df_order_income_wallet,
-                                target_table = 'rc_report.rpt_sp_journal_order_transform',
+                                target_table = 'report_rc.rpt_sp_journal_order_transform',
                                 write_method=db_method,
                                 unique_col_ref = ['order_number','folder_id']
                                 )
@@ -351,13 +351,13 @@ def check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_
 
     query = f'''WITH all_month_wallet AS (
         SELECT DISTINCT month_wallet
-        FROM `bi-gbq.rc_report.sp_pay_wallet`
+        FROM `bi-gbq.report_rc.sp_pay_wallet`
         WHERE folder_id = '{folder_id}'
         AND month_wallet IN {tuple(prev_month_list)}
     ),
     month_with_penarikan_dana AS (
         SELECT DISTINCT month_wallet, 'Yes' AS penarikan_dana_flag
-        FROM `bi-gbq.rc_report.sp_pay_wallet`
+        FROM `bi-gbq.report_rc.sp_pay_wallet`
         WHERE folder_id = '{folder_id}'
         AND LOWER(description) LIKE '%penarikan dana%'
     )
@@ -421,12 +421,12 @@ def withdrawn_last_month(report_month,folder_id):
     query = f'''
         WITH order_income AS (
             SELECT *
-            FROM `bi-gbq.rc_report.rpt_sp_journal_order` AS income_data
+            FROM `bi-gbq.report_rc.rpt_sp_journal_order` AS income_data
             WHERE month_income IN {tuple(before_this_month_included)}
             AND folder_id = '{folder_id}'
             AND EXISTS (
                 SELECT 1
-                FROM `bi-gbq.rc_report.rpt_sp_journal_base` AS order_data
+                FROM `bi-gbq.report_rc.rpt_sp_journal_base` AS order_data
                 WHERE order_data.folder_id = '{folder_id}'
                     AND order_data.order_number = income_data.order_number
                     AND order_data.month_order IN {tuple(before_this_month_excluded)}
@@ -437,7 +437,7 @@ def withdrawn_last_month(report_month,folder_id):
         wallet_data AS (
             SELECT folder_id, order_number, wp_has_been_withdrawn, wp_this_month_order, wp_described_as_income,
                     sheet_omset, sheet_wp, sheet_piutang
-            FROM `bi-gbq.rc_report.rpt_sp_journal_base`
+            FROM `bi-gbq.report_rc.rpt_sp_journal_base`
             WHERE {month_wallet_condition}
             AND wp_described_as_income = 1
             AND folder_id = '{folder_id}'
@@ -491,7 +491,7 @@ def withdrawn_last_month(report_month,folder_id):
 
     # Arrange Column Order
 
-    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base` LIMIT 1')
+    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
 
     df_filtered = df[journal_base_raw_col_list.columns.tolist()]
 
@@ -509,14 +509,14 @@ def pending_last_month(report_month,folder_id,month_col_ref):
         month_wallet_condition = f"month_wallet IN {tuple(month_list)}"
 
     # Check whether in the report_month there is a withdrawal activity
-    count_withdrawal = read_from_gbq(BI_CLIENT,f'''SELECT count(1) FROM `bi-gbq.rc_report.rpt_sp_journal_base`
+    count_withdrawal = read_from_gbq(BI_CLIENT,f'''SELECT count(1) FROM `bi-gbq.report_rc.rpt_sp_journal_base`
     WHERE month_wallet = '{report_month}' AND folder_id = '{folder_id}'
     AND LOWER(w_description) LIKE '%penarikan dana%' ''')
 
     if count_withdrawal.iloc[0, 0] == 0:
         return pd.DataFrame()
     
-    query = f'''SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base`
+    query = f'''SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base`
                 WHERE ({month_wallet_condition})
                       AND (wp_has_been_withdrawn = 0)
                       AND (folder_id = '{folder_id}')'''
@@ -546,7 +546,7 @@ def pending_last_month(report_month,folder_id,month_col_ref):
 
     # Arrange Column Order
 
-    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base` LIMIT 1')
+    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
 
     df_filtered = df[journal_base_raw_col_list.columns.tolist()]
 
@@ -568,7 +568,7 @@ def calculate_debit_credit(df,col_filter,col_list_to_sum,sort_index,category_nam
     df_filter = df_filter[df_filter['value_total'] != 0]
 
     if wallet_category:
-        df_filter['category_1'] = df_filter['w_description'].apply(flexible_categorize_by_description, args=(shopee_wallet_category_mappings, 'simple', 'flexible'))
+        df_filter['category_1'] = df_filter['w_description'].apply(flexible_categorize_by_description, args=(rc_shopee_wallet_category_mappings, 'simple', 'flexible'))
         df_filter = df_filter[df_filter['category_1'] != 'Penghasilan Dari Pesanan']
         df_filter['category_1'] = df_filter['category_1'] + ' (W)'
 
@@ -583,7 +583,7 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     print(f"\033[1;32m📊 Journal Dashboard for : {folder_id}, month = {report_month} 📊\033[0m")
 
-    query = f'''SELECT * FROM `bi-gbq.rc_report.rpt_sp_journal_base`
+    query = f'''SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base`
                 WHERE report_month = '{report_month}' AND folder_id = '{folder_id}'
             '''
 
@@ -699,7 +699,7 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     map_date = read_from_gbq(BI_CLIENT,f'''SELECT CONCAT(folder_id,order_number) AS uq_id,month_order,month_income,month_wallet,
                                                     o_order_creation_time, i_fund_release_date, w_transaction_date
-                                            FROM `bi-gbq.rc_report.rpt_sp_journal_order_transform`
+                                            FROM `bi-gbq.report_rc.rpt_sp_journal_order_transform`
                                             WHERE folder_id = '{folder_id}' AND month_order IN {tuple(before_this_month_included)}
                                             ''')
     map_date = map_date.drop_duplicates(subset=['uq_id'])
@@ -831,13 +831,36 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
     # Load to GBQ
     
     write_table_by_unique_id(df_concat,
-                                target_table = 'rc_report.rpt_sp_journal_report',
+                                target_table = 'report_rc.rpt_sp_journal_report',
                                 write_method=db_method,
                                 unique_col_ref = ['report_month','folder_id']
                             )
     
     write_table_by_unique_id(df_group,
-                                target_table = 'rc_report.rpt_sp_journal_dashboard',
+                                target_table = 'report_rc.rpt_sp_journal_dashboard',
                                 write_method=db_method,
                                 unique_col_ref = ['report_month','folder_id']
                             )
+    
+if __name__ == '__main__':
+    
+    tasks = [
+
+        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : False}), # 1. Create Journal Order
+
+        (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : True}), # 2. Create Journal Order Transform
+    ]
+
+    months = get_month_list(month_start='202401',month_end='202412',month_format='%Y%m')
+
+    # 3. Create Journal Base (looped)
+    for folder in rc_shopee_store_info.keys():
+        for month in months:
+            tasks.append((create_journal_base, {'journal_base': True, 'data_month': month, 'folder_id': folder, 'db_method': 'append', 'transform' : False}))
+
+    # 4. Create Journal Dashboard (looped)
+    for folder in rc_shopee_store_info.keys():
+        for month in months:
+            tasks.append((create_journal_dashboard, {'report_month': month, 'folder_id': folder, 'db_method': 'append'}))
+
+    log_function(tasks)

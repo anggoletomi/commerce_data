@@ -5,11 +5,10 @@ import sys,os
 sys.path.insert(0, os.getenv("PROJECT_PATH"))
 
 from bi_function import *
-from rc_report.rc_setup import *
 
-def sp_income_released(count_file,db_method):
+def sp_income_released(count_file,target_table,db_method,data_path,store_dim):
 
-    file_path = get_latest_file_multiple_folder([os.path.join(os.getenv("BASE_RAW_FILE_PATH", ""), folder) for folder in shopee_income_path],n=count_file)
+    file_path = get_latest_file_multiple_folder([os.path.join(os.getenv("BASE_RAW_FILE_PATH", ""), folder) for folder in data_path],n=count_file)
 
     print(f'count_file = {count_file}')
     print(f'actual file = {len(file_path)}')
@@ -124,11 +123,11 @@ def sp_income_released(count_file,db_method):
 
         uq_id = Path(path).parts[-2]
 
-        df.insert(2, 'store_id', shopee_store_info[uq_id][0])
-        df.insert(3, 'country', shopee_store_info[uq_id][1])
-        df.insert(4, 'currency', shopee_store_info[uq_id][2])
-        df.insert(5, 'platform', shopee_store_info[uq_id][3])
-        df.insert(6, 'store', shopee_store_info[uq_id][4])
+        df.insert(2, 'store_id', store_dim[uq_id][0])
+        df.insert(3, 'country', store_dim[uq_id][1])
+        df.insert(4, 'currency', store_dim[uq_id][2])
+        df.insert(5, 'platform', store_dim[uq_id][3])
+        df.insert(6, 'store', store_dim[uq_id][4])
         df.insert(7, 'folder_id', uq_id)
 
         return df
@@ -136,9 +135,8 @@ def sp_income_released(count_file,db_method):
     df = pd.concat([read_table(path) for path in file_path], ignore_index=True)
     
     write_table_by_unique_id(df,
-                            target_table = 'rc_report.sp_income_released',
+                            target_table = target_table,
                             write_method=db_method,
                             unique_col_ref = ['folder_id','order_number'],
                             date_col_ref = 'fund_release_date'
                             )
-    

@@ -5,11 +5,10 @@ import sys,os
 sys.path.insert(0, os.getenv("PROJECT_PATH"))
 
 from bi_function import *
-from rc_report.rc_setup import *
 
-def sp_pay_wallet(count_file,db_method):
+def sp_pay_wallet(count_file,target_table,db_method,data_path,store_dim):
 
-    file_path = get_latest_file_multiple_folder([os.path.join(os.getenv("BASE_RAW_FILE_PATH", ""), folder) for folder in shopee_pay_path],n=count_file)
+    file_path = get_latest_file_multiple_folder([os.path.join(os.getenv("BASE_RAW_FILE_PATH", ""), folder) for folder in data_path],n=count_file)
 
     print(f'count_file = {count_file}')
     print(f'actual file = {len(file_path)}')
@@ -64,11 +63,11 @@ def sp_pay_wallet(count_file,db_method):
 
         uq_id = Path(path).parts[-2]
 
-        df.insert(1, 'store_id', shopee_store_info[uq_id][0])
-        df.insert(2, 'country', shopee_store_info[uq_id][1])
-        df.insert(3, 'currency', shopee_store_info[uq_id][2])
-        df.insert(4, 'platform', shopee_store_info[uq_id][3])
-        df.insert(5, 'store', shopee_store_info[uq_id][4])
+        df.insert(1, 'store_id', store_dim[uq_id][0])
+        df.insert(2, 'country', store_dim[uq_id][1])
+        df.insert(3, 'currency', store_dim[uq_id][2])
+        df.insert(4, 'platform', store_dim[uq_id][3])
+        df.insert(5, 'store', store_dim[uq_id][4])
         df.insert(6, 'folder_id', uq_id)
         
         return df
@@ -76,7 +75,7 @@ def sp_pay_wallet(count_file,db_method):
     df = pd.concat([read_table(path) for path in file_path], ignore_index=True)
     
     write_table_by_unique_id(df,
-                            target_table = 'rc_report.sp_pay_wallet',
+                            target_table = target_table,
                             write_method=db_method,
                             unique_col_ref = ['folder_id','transaction_type','description','order_number','transaction_category'], # need to be optimized, still have duplicate with this combination when append
                             date_col_ref = 'transaction_date'
