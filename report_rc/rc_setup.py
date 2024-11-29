@@ -92,12 +92,12 @@ rc_shopee_wallet_category_mappings = {
         'database': 'refund_damaged_full'
     },
     'penggantian dana sebagian barang hilang': {
-        'simple': 'Penggantian Barang Hilang/Rusak',
+        'simple': 'Penggantian Barang Hilang/Rusak Sebagian',
         'english': 'Partial Refund for Lost Item',
         'database': 'refund_lost_partial'
     },
     'penggantian dana sebagian barang rusak': {
-        'simple': 'Penggantian Barang Hilang/Rusak',
+        'simple': 'Penggantian Barang Hilang/Rusak Sebagian',
         'english': 'Partial Refund for Damaged Item',
         'database': 'refund_damaged_partial'
     },
@@ -182,6 +182,11 @@ rc_shopee_wallet_category_mappings = {
         'database': 'auto_approve_compensation_without_judging'
     },
     'kompensasi biaya kemasan program garansi bebas pengembalian': {
+        'simple': 'Kompensasi Biaya Kemasan Program Garansi Bebas Pengembalian',
+        'english': 'Packaging Cost Compensation - Free Return Guarantee Program',
+        'database': 'free_return_program_packaging_cost'
+    },
+    'penggantian biaya kemasan program garansi bebas pengembalian': {
         'simple': 'Kompensasi Biaya Kemasan Program Garansi Bebas Pengembalian',
         'english': 'Packaging Cost Compensation - Free Return Guarantee Program',
         'database': 'free_return_program_packaging_cost'

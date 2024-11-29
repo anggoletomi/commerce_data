@@ -76,7 +76,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         query_order = f'''SELECT DATE(order_creation_time) AS order_creation_time,folder_id,order_number,
                             SUM(total_product_price) AS total_product_price
                     FROM `bi-gbq.report_rc.sp_order_data`
-                    WHERE (UPPER(order_status) = 'SELESAI')
+                    WHERE (UPPER(order_status) != 'BATAL')
                         AND (LENGTH(order_number) > 1)
                         AND (month_order = '{data_month}')
                         AND (folder_id = '{folder_id}')
@@ -172,12 +172,14 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         df_order['merge_helper'] = 1 # all 1 because df_order order number is already unique
         df_income['merge_helper'] = 1 # all 1 because df_income order number is already unique
 
+        # keywords = ['penghasilan dari pesanan', 'kompensasi']
         keywords = ['penghasilan dari pesanan', 'kompensasi kehilangan']
+        # keywords = ['penghasilan dari pesanan']
         df_wallet['merge_helper'] = df_wallet['description'].apply(lambda x: 1 if any(keyword.lower() in x.lower() for keyword in keywords) else 0)
 
-        # Add an index to the column name to differentiate the origin of each column after merging
         key_columns = ['folder_id', 'order_number', 'merge_helper']
 
+    # Add an index to the column name to differentiate the origin of each column after merging
     df_order = df_order.rename(columns={col: f'o_{col}' for col in df_order.columns if col not in key_columns})
     df_income = df_income.rename(columns={col: f'i_{col}' for col in df_income.columns if col not in key_columns})
     df_wallet = df_wallet.rename(columns={col: f'w_{col}' for col in df_wallet.columns if col not in key_columns})
@@ -269,7 +271,8 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         # in excel video tutorial, sheetname : piutang
         df_order_income_wallet['sheet_piutang'] = np.where(
-            (df_order_income_wallet['merge_status'].isin(['ORDER', 'ORDER,WALLET', 'ORDER,INCOME', 'ORDER,INCOME,WALLET'])) &
+            (df_order_income_wallet['wp_described_as_income'] != 0) &
+            # (df_order_income_wallet['merge_status'].isin(['ORDER', 'ORDER,WALLET', 'ORDER,INCOME', 'ORDER,INCOME,WALLET'])) &
             (df_order_income_wallet['wp_has_been_withdrawn'] != 1),
             1,
             0
@@ -542,13 +545,13 @@ def pending_last_month(report_month,folder_id,month_col_ref):
 
     # Filter Data
 
-    df = df[df[month_col_ref].notnull()]
+    df_not_null = df[df[month_col_ref].notnull()]
 
     # Arrange Column Order
 
     journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
 
-    df_filtered = df[journal_base_raw_col_list.columns.tolist()]
+    df_filtered = df_not_null[journal_base_raw_col_list.columns.tolist()]
 
     df_filtered['idx_sheet_temp'] = 1 # so we can align with calculate_debit_credit function later
 
