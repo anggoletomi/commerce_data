@@ -17,7 +17,7 @@ for i in range(1, 100):
         rc_store_data = json.loads(rc_value)
         rc_shopee_store_info.update(rc_store_data)
     else:
-        break
+        continue
 
 rc_shopee_order_path = [f"rc_raw_file/shopee_order/{key}/" for key in rc_shopee_store_info]
 
@@ -25,34 +25,60 @@ rc_shopee_pay_path = [f"rc_raw_file/shopee_pay/{key}/" for key in rc_shopee_stor
 
 rc_shopee_income_path = [f"rc_raw_file/shopee_income/{key}/" for key in rc_shopee_store_info]
 
-rc_shopee_gdrive_folder = {
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_1")).keys())[0]}' : '1EkOwVnuKpupZpkJCPizSObQ_7pi8wI12',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_2")).keys())[0]}' : '1uuYhYoil27NwZI9MVWkv0pfbAQ_OgqAv',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_3")).keys())[0]}' : '1yV5ShZ6oyrE2z1kVI5WWoDREYNdb9pBL',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_4")).keys())[0]}' : '1mefdL1aC4N3XFZMOE-5t-h9vdsR6Gh6I',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_5")).keys())[0]}' : '17Ft8kky9rhYAwjV1M8ifNZyQHfnjO2Wu',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_6")).keys())[0]}' : '11MdKfhYwNIqFDCBhxkW9L2kQvZlD4pov',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_7")).keys())[0]}' : '1aoEcvHxkWlIBJmLj74iYkqIp5o_wLmSY',
-    f'rc_raw_file/shopee_income/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_8")).keys())[0]}' : '1tqqQCeol0_JQNHWEYSsgqTEaD64mQXOG',
-    
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_1")).keys())[0]}' : '1CWjll_IiSN9iWkVLuNf4KRBwJTCCTqXR',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_2")).keys())[0]}' : '1qHfJToDKxPgiQ-DSGn1Mk6mbBkVnk6f8',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_3")).keys())[0]}' : '1SXAwFsngXH31T37eudVlqvxaHbrdqoNe',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_4")).keys())[0]}' : '1kwEj_guhF-6oWB3EMhMYWkKt_41PIHmL',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_5")).keys())[0]}' : '1eN6fr7JT9o5hkQ_JVGFr9nTCikxoFV8Z',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_6")).keys())[0]}' : '16GdAHJeg10TD-ofnuOh10kQK_MRmLCD5',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_7")).keys())[0]}' : '1TBMqYd_hx3B1hxPVxNuFKsbe1qkDioCl',
-    f'rc_raw_file/shopee_order/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_8")).keys())[0]}' : '1kcdDK80u5y_DwGPw6YJgWaRjT9IwK1_G',
-    
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_1")).keys())[0]}' : '1zp8OcrIMqMO80x8bb0D1qz79KoxbNUie',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_2")).keys())[0]}' : '1rd-e7aEfI6Qjbacyr2Y2jnzVK0DYnDCd',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_3")).keys())[0]}' : '14rsDO-oRu24FyhWgG4iAonwkJMshe2x9',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_4")).keys())[0]}' : '1sEA5B5WbopdOzJCDUl2_9DP6aOZC1BNp',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_5")).keys())[0]}' : '1F1Wav0F8bJQxluSAfVETvxvyRZzeXdl7',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_6")).keys())[0]}' : '1KXmSiH9E8IrmB3AjD3JyJ-TXoBt13Xlp',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_7")).keys())[0]}' : '1U00Gs0JReY72AET58Tce-FdhfHzKExma',
-    f'rc_raw_file/shopee_pay/{list(json.loads(os.getenv("RC_SHOPEE_STORE_INFO_8")).keys())[0]}' : '1Sd0AJmNk2YQYqKTA9ijVp08eU6WinPP0',
+# Google Drive Folder Mapping
+def get_store_key(env_var):
+    """Safely retrieve the key for the Shopee store from an environment variable."""
+    value = os.getenv(env_var)
+    if value:
+        try:
+            store_info = json.loads(value)
+            if store_info:  # Ensure the parsed JSON contains keys
+                return list(store_info.keys())[0]
+        except json.JSONDecodeError:
+            print(f"Warning: Invalid JSON format in environment variable '{env_var}'")
+    return None  # Return None if the variable is missing or invalid
+
+# Define the folder mapping with placeholders
+folder_mapping = {
+    "shopee_income": {
+        "RC_SHOPEE_STORE_INFO_1": "1EkOwVnuKpupZpkJCPizSObQ_7pi8wI12",
+        "RC_SHOPEE_STORE_INFO_2": "1uuYhYoil27NwZI9MVWkv0pfbAQ_OgqAv",
+        "RC_SHOPEE_STORE_INFO_3": "1yV5ShZ6oyrE2z1kVI5WWoDREYNdb9pBL",
+        "RC_SHOPEE_STORE_INFO_4": "1mefdL1aC4N3XFZMOE-5t-h9vdsR6Gh6I",
+        "RC_SHOPEE_STORE_INFO_5": "17Ft8kky9rhYAwjV1M8ifNZyQHfnjO2Wu",
+        "RC_SHOPEE_STORE_INFO_6": "11MdKfhYwNIqFDCBhxkW9L2kQvZlD4pov",
+        "RC_SHOPEE_STORE_INFO_7": "1aoEcvHxkWlIBJmLj74iYkqIp5o_wLmSY",
+        "RC_SHOPEE_STORE_INFO_8": "1tqqQCeol0_JQNHWEYSsgqTEaD64mQXOG",
+    },
+    "shopee_order": {
+        "RC_SHOPEE_STORE_INFO_1": "1CWjll_IiSN9iWkVLuNf4KRBwJTCCTqXR",
+        "RC_SHOPEE_STORE_INFO_2": "1qHfJToDKxPgiQ-DSGn1Mk6mbBkVnk6f8",
+        "RC_SHOPEE_STORE_INFO_3": "1SXAwFsngXH31T37eudVlqvxaHbrdqoNe",
+        "RC_SHOPEE_STORE_INFO_4": "1kwEj_guhF-6oWB3EMhMYWkKt_41PIHmL",
+        "RC_SHOPEE_STORE_INFO_5": "1eN6fr7JT9o5hkQ_JVGFr9nTCikxoFV8Z",
+        "RC_SHOPEE_STORE_INFO_6": "16GdAHJeg10TD-ofnuOh10kQK_MRmLCD5",
+        "RC_SHOPEE_STORE_INFO_7": "1TBMqYd_hx3B1hxPVxNuFKsbe1qkDioCl",
+        "RC_SHOPEE_STORE_INFO_8": "1kcdDK80u5y_DwGPw6YJgWaRjT9IwK1_G",
+    },
+    "shopee_pay": {
+        "RC_SHOPEE_STORE_INFO_1": "1zp8OcrIMqMO80x8bb0D1qz79KoxbNUie",
+        "RC_SHOPEE_STORE_INFO_2": "1rd-e7aEfI6Qjbacyr2Y2jnzVK0DYnDCd",
+        "RC_SHOPEE_STORE_INFO_3": "14rsDO-oRu24FyhWgG4iAonwkJMshe2x9",
+        "RC_SHOPEE_STORE_INFO_4": "1sEA5B5WbopdOzJCDUl2_9DP6aOZC1BNp",
+        "RC_SHOPEE_STORE_INFO_5": "1F1Wav0F8bJQxluSAfVETvxvyRZzeXdl7",
+        "RC_SHOPEE_STORE_INFO_6": "1KXmSiH9E8IrmB3AjD3JyJ-TXoBt13Xlp",
+        "RC_SHOPEE_STORE_INFO_7": "1U00Gs0JReY72AET58Tce-FdhfHzKExma",
+        "RC_SHOPEE_STORE_INFO_8": "1Sd0AJmNk2YQYqKTA9ijVp08eU6WinPP0",
+    },
 }
+
+# Build the final dictionary dynamically
+rc_shopee_gdrive_folder = {}
+for folder_type, mapping in folder_mapping.items():
+    for env_var, folder_id in mapping.items():
+        store_key = get_store_key(env_var)
+        if store_key:  # Only include if the environment variable is valid
+            rc_shopee_gdrive_folder[f'rc_raw_file/{folder_type}/{store_key}'] = folder_id
 
 rc_shopee_wallet_category_mappings = {
     'penggantian dana penuh barang hilang': {
