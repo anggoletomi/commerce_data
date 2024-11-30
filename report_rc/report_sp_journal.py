@@ -403,11 +403,16 @@ def check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_
         result.append(prev_min_month)
         if include_current_month:
             result.append(report_month)
-        return tuple(result)
+        return tuple(sorted(result))
         
 def withdrawn_last_month(report_month,folder_id):
 
-    no_withdrawn_in_a_month = check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id)
+    # Previous month's orders data (Piutang) that not exist or recorded in the previous month's wallet data
+    # Instead, previous month's orders data recorded in report_month wallet data
+    # This only include order data
+    # key : wp_described_as_income = 1
+
+    no_withdrawn_in_a_month = check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id,include_current_month=True)
     before_this_month_excluded = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(1, 13)]
     before_this_month_included = [(datetime.strptime(report_month, "%Y%m").replace(day=1) - timedelta(days=30 * i)).strftime("%Y%m") for i in range(0, 13)]
 
@@ -444,7 +449,7 @@ def withdrawn_last_month(report_month,folder_id):
             WHERE {month_wallet_condition}
             AND wp_described_as_income = 1
             AND folder_id = '{folder_id}'
-            AND sheet_piutang = 0
+            AND sheet_piutang = 0 -- or can try 'AND sheet_piutang != 1' as well, during the test the result is the same
         )
         SELECT 
             order_income.*, 
@@ -504,6 +509,11 @@ def withdrawn_last_month(report_month,folder_id):
 
 def pending_last_month(report_month,folder_id,month_col_ref):
 
+    # Previous month's orders data (Piutang) that already recorded in the previous month's wallet data
+    # But, the funds have not yet been withdrawn to the account (rows above the latest 'Penarikan Dana')
+    # This also includes rows that are not orders, such as 'Saldo Iklan', etc
+    # key : wp_has_been_withdrawn = 0
+
     month_list = check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_id,include_current_month=False)
 
     if isinstance(month_list, str):
@@ -519,10 +529,16 @@ def pending_last_month(report_month,folder_id,month_col_ref):
     if count_withdrawal.iloc[0, 0] == 0:
         return pd.DataFrame()
     
+    if month_col_ref == 'month_income':
+        additional_conditions = 'AND (wp_described_as_income = 1)'
+    else:
+        additional_conditions = ''
+    
     query = f'''SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base`
                 WHERE ({month_wallet_condition})
                       AND (wp_has_been_withdrawn = 0)
-                      AND (folder_id = '{folder_id}')'''
+                      AND (folder_id = '{folder_id}')
+                      {additional_conditions}'''
     
     try:
         df = read_from_gbq(BI_CLIENT, query)
@@ -543,9 +559,35 @@ def pending_last_month(report_month,folder_id,month_col_ref):
     # Add Report Month
     df['report_month'] = report_month # update the report_month because this going to be use as journal this month
 
+    # Handle Income Null
+
+    df_search_income = df.drop(columns=[col for col in df.columns if col in ['month_income', 'month_order'] or col.startswith('i_')])
+
+    order_reference = df_search_income[['folder_id','order_number']].drop_duplicates()
+    write_to_gbq(order_reference, BI_PROJECT_ID, BI_CREDENTIAL, 'data_stage.rc_order_ref_search_income', 'replace', 'asia-southeast2')
+    time.sleep(1)
+
+    query_try_income = f'''SELECT * 
+                            FROM `bi-gbq.report_rc.sp_income_released` AS i
+                            WHERE EXISTS (
+                                SELECT 1
+                                FROM `bi-gbq.data_stage.rc_order_ref_search_income` AS r
+                                WHERE i.folder_id = r.folder_id
+                                AND i.order_number = r.order_number
+                            )
+                            '''
+
+    df_try_income = read_from_gbq(BI_CLIENT,query_try_income)
+    df_try_income['order_creation_time'] = pd.to_datetime(df_try_income['order_creation_time']).dt.tz_localize(None)
+    df_try_income['fund_release_date'] = pd.to_datetime(df_try_income['fund_release_date']).dt.tz_localize(None)
+    df_try_income = df_try_income.drop(columns=['store_id','country','currency','platform','store'])
+    df_try_income = df_try_income.rename(columns={col: f'i_{col}' for col in df_try_income.columns if col not in ['month_income','month_order','folder_id','order_number']})
+
+    df_merge_income = df_search_income.merge(df_try_income,on=['folder_id','order_number'],how='left')
+
     # Filter Data
 
-    df_not_null = df[df[month_col_ref].notnull()]
+    df_not_null = df_merge_income[df_merge_income[month_col_ref].notnull()]
 
     # Arrange Column Order
 
@@ -854,7 +896,7 @@ if __name__ == '__main__':
         (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : True}), # 2. Create Journal Order Transform
     ]
 
-    months = get_month_list(month_start='202401',month_end='202412',month_format='%Y%m')
+    months = get_month_list(month_start='202410',month_end='202411',month_format='%Y%m')
 
     # 3. Create Journal Base (looped)
     for folder in rc_shopee_store_info.keys():
