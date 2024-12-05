@@ -128,7 +128,8 @@ def write_table_by_unique_id(df, target_table, write_method, unique_col_ref, dat
             print(f"Data uploaded - {target_table} : {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
         except Exception as e:
-            print(f"Error during delete and load process: {e}")
+            print(f"\033[1;31mError during delete and load process: {e}\033[0m")
+            raise
 
     else:
         print(f'\033[1;31mThe options for the write_table method are either "replace" or "append". Please choose the correct one.\033[0m')
