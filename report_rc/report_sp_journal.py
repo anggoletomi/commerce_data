@@ -491,7 +491,7 @@ def withdrawn_last_month(report_month,folder_id):
 
     query_add = f'''SELECT *
                 FROM `bi-gbq.report_rc.rpt_sp_journal_order` AS income_data
-                WHERE month_income = '{report_month}'
+                WHERE month_income >= '{report_month}'
                 AND folder_id = '{folder_id}'
                 AND i_total_income = 0
                 AND month_wallet is null
