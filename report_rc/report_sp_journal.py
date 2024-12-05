@@ -269,10 +269,16 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
             0
         )
 
+        df_order_income_wallet['sheet_wp'] = np.where((df_order_income_wallet['i_total_income'] == 0) &
+                                                      (df_order_income_wallet['sheet_omset'] == 1) &
+                                                      (df_order_income_wallet['sheet_wp'] == 0),
+                                                      1,
+                                                      df_order_income_wallet['sheet_wp'])
+
         # in excel video tutorial, sheetname : piutang
         df_order_income_wallet['sheet_piutang'] = np.where(
             (df_order_income_wallet['wp_described_as_income'] != 0) &
-            # (df_order_income_wallet['merge_status'].isin(['ORDER', 'ORDER,WALLET', 'ORDER,INCOME', 'ORDER,INCOME,WALLET'])) &
+            (df_order_income_wallet['i_total_income'] != 0) &
             (df_order_income_wallet['wp_has_been_withdrawn'] != 1),
             1,
             0
@@ -479,29 +485,75 @@ def withdrawn_last_month(report_month,folder_id):
         print(f"⚠️ withdrawn_last_month : failed to read data due to error: {e}")
         print('-------------------------------------------------------------------------------')
         return pd.DataFrame()
+    
+    # Adding Additional Data
+    # Previous month data already refund to customer in Income Data, but has never been showing in Wallet Data
+
+    query_add = f'''SELECT *
+                FROM `bi-gbq.report_rc.rpt_sp_journal_order` AS income_data
+                WHERE month_income = '{report_month}'
+                AND folder_id = '{folder_id}'
+                AND i_total_income = 0
+                AND month_wallet is null
+                AND EXISTS (
+                    SELECT 1
+                    FROM `bi-gbq.report_rc.rpt_sp_journal_base` AS order_data
+                    WHERE order_data.folder_id = '{folder_id}'
+                        AND order_data.order_number = income_data.order_number
+                        AND order_data.month_order IN {tuple(before_this_month_excluded)}
+                        AND order_data.sheet_piutang = 1
+                        AND order_data.folder_id = income_data.folder_id)'''
+    
+    try:
+        df_add = read_from_gbq(BI_CLIENT,query_add)
+
+        if df_add.empty: # Check if the DataFrame is empty
+            print(f"⚠️ ADDITIONAL DATA - withdrawn_last_month : no data found for the previous month ({no_withdrawn_in_a_month}) and folder index ({folder_id})")
+            print('-------------------------------------------------------------------------------')
+            df_add = pd.DataFrame(columns=df.columns)
+    
+    except Exception as e:
+        print(f"⚠️ ADDITIONAL DATA - withdrawn_last_month : failed to read data due to error: {e}")
+        print('-------------------------------------------------------------------------------')
+        df_add = pd.DataFrame(columns=df.columns)
+
+    # Create Non-Exist Columns
+    for n in ['wp_has_been_withdrawn', 'wp_this_month_order', 'wp_described_as_income', 'sheet_omset', 'sheet_wp']:
+        df_add[n] = None
+
+    df_add['sheet_piutang'] = 1 # explicitly define as 1 (all in df_add is piutang) because this will be use for calculate_debit_credit function
+
+    # Filtering
+    df_add = df_add[~df_add['order_number'].isin(df['order_number'])]
+    df_add = df_add[df.columns.tolist()]
+
+    df_concat = pd.concat([df,df_add])
 
     # Localize Time
     for d in ['o_order_creation_time','i_order_creation_time','i_fund_release_date','w_transaction_date']:
-        df[d] = df[d].dt.tz_localize(None)
+        df_concat[d] = df_concat[d].dt.tz_localize(None)
 
     # Add Report Month
-    df['report_month'] = report_month
+    df_concat['report_month'] = report_month
 
     # Further processing for multiple wallet (no_withdrawn_in_a_month is a tuple)
 
     if isinstance(no_withdrawn_in_a_month, tuple):
         earliest_month_wallet = min(no_withdrawn_in_a_month)
 
-        df_earliest = df[(df['month_wallet'] == earliest_month_wallet) & (df['sheet_piutang'] == 1)]
-        df_others = df[df['month_wallet'] != earliest_month_wallet]
+        df_earliest = df_concat[(df_concat['month_wallet'] == earliest_month_wallet) & (df_concat['sheet_piutang'] == 1)]
+        df_others = df_concat[df_concat['month_wallet'] != earliest_month_wallet]
 
-        df = pd.concat([df_earliest, df_others], ignore_index=True)
+        df_concat_again = pd.concat([df_earliest, df_others], ignore_index=True)
+
+    else:
+        df_concat_again = df_concat.copy()
 
     # Arrange Column Order
 
     journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
 
-    df_filtered = df[journal_base_raw_col_list.columns.tolist()]
+    df_filtered = df_concat_again[journal_base_raw_col_list.columns.tolist()]
 
     df_filtered['idx_sheet_temp'] = 1 # so we can align with calculate_debit_credit function later
 
@@ -896,7 +948,7 @@ if __name__ == '__main__':
         (create_journal_base, {'journal_base': False, 'start_date': '2024-01-01', 'db_method': 'replace', 'transform' : True}), # 2. Create Journal Order Transform
     ]
 
-    months = get_month_list(month_start='202410',month_end='202411',month_format='%Y%m')
+    months = get_month_list(month_start='202412',month_end='202412',month_format='%Y%m')
 
     # 3. Create Journal Base (looped)
     for folder in rc_shopee_store_info.keys():
