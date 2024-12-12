@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dateutil.relativedelta import relativedelta
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
@@ -215,33 +215,49 @@ def get_local_time():
 
     print(f'\033[36mCurrent Timestamp : {current_time.strftime("%Y-%m-%d %H:%M:%S")} - {timezone_name} (GMT{gmt_offset})\033[0m')
 
-def convert_unix(ori_format,value):  # ori_format : unix/human_date , example of value : unix (int) =  1692583200000 , human_date (str) = '2023-08-21 09:00:00'
+def convert_unix(ori_format, value, unix_output_format='milliseconds'):
+    """
+    Convert between Unix timestamps and human-readable dates.
+    
+    - ori_format : 'unix' or 'human_date'
+    - value: int (for 'unix') or str (for 'human_date')
+      e.g. 'unix' (int) = 1692583200000 
+      e.g. 'human_date' (str) = '2023-08-21 09:00:00' in UTC
+    - unix_output_format: 'seconds' or 'milliseconds' (default: 'milliseconds')
+    """
     if ori_format == 'unix':
         value_str = str(value)
-        if len(value_str) == 10:
+        if len(value_str) == 10:  # Unix timestamp in seconds
             unix_time_in_seconds = int(value)
-        elif len(value_str) == 13:
+        elif len(value_str) == 13:  # Unix timestamp in milliseconds
             unix_time_in_seconds = int(value) / 1000
         else:
-            raise ValueError("value input in the argument does not meet unix timestamp format expected")
+            raise ValueError("Value input does not meet the expected Unix timestamp format.")
 
-        dt_utc = datetime.utcfromtimestamp(unix_time_in_seconds)
+        # Convert Unix timestamp to UTC datetime
+        dt_utc = datetime.fromtimestamp(unix_time_in_seconds, timezone.utc)
         dt_utc_str = dt_utc.strftime("%Y-%m-%d %H:%M:%S")
 
         return dt_utc_str
 
     elif ori_format == 'human_date':
         try:
-            dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+            dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         except ValueError:
-            raise ValueError("value input does not match the expected format 'YYYY-MM-DD HH:MM:SS'")
+            raise ValueError("Value input does not match the expected format 'YYYY-MM-DD HH:MM:SS'.")
 
+        # Convert UTC datetime to Unix timestamp
         unix_timestamp_seconds = dt.timestamp()
-        unix_timestamp_milliseconds = int(unix_timestamp_seconds * 1000)
+        
+        if unix_output_format == 'seconds':
+            return int(unix_timestamp_seconds)
+        elif unix_output_format == 'milliseconds':
+            return int(unix_timestamp_seconds * 1000)
+        else:
+            raise ValueError("unix_output_format must be either 'seconds' or 'milliseconds'.")
 
-        return unix_timestamp_milliseconds
     else:
-        raise ValueError("ori_format argument must be either 'unix' or 'human_date'")
+        raise ValueError("ori_format argument must be either 'unix' or 'human_date'.")
 
 # SAFE DIVIDE
     
