@@ -75,7 +75,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         query_order = f'''SELECT DATE(order_creation_time) AS order_creation_time,folder_id,order_number,
                             SUM(total_product_price) AS total_product_price
-                    FROM `bi-gbq.report_rc.sp_order_data`
+                    FROM `{BI_PROJECT_ID}.report_rc.sp_order_data`
                     WHERE (UPPER(order_status) != 'BATAL')
                         AND (LENGTH(order_number) > 1)
                         AND (month_order = '{data_month}')
@@ -84,7 +84,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         '''
 
         query_income = f'''SELECT *
-                            FROM `bi-gbq.report_rc.sp_income_released`
+                            FROM `{BI_PROJECT_ID}.report_rc.sp_income_released`
                             WHERE (month_income = '{data_month}')
                                 AND (month_order = '{data_month}')
                                 AND (LENGTH(order_number) > 1)
@@ -92,7 +92,7 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
         '''
 
         query_wallet = f'''SELECT *
-                            FROM `bi-gbq.report_rc.sp_pay_wallet`
+                            FROM `{BI_PROJECT_ID}.report_rc.sp_pay_wallet`
                             WHERE (month_wallet = '{data_month}')
                                 AND (folder_id = '{folder_id}')
                             ORDER BY transaction_date DESC
@@ -105,16 +105,16 @@ def create_journal_base(journal_base=True,data_month=None,folder_id=None,start_d
 
         query_order = f'''SELECT DATE(order_creation_time) AS order_creation_time,folder_id,order_number,order_status,
                                 SUM(total_product_price) AS total_product_price
-                            FROM `bi-gbq.report_rc.sp_order_data`
+                            FROM `{BI_PROJECT_ID}.report_rc.sp_order_data`
                             WHERE (DATE(order_creation_time) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)
                             GROUP BY DATE(order_creation_time),folder_id,order_number,order_status'''
 
-        query_income = f'''SELECT * FROM `bi-gbq.report_rc.sp_income_released`
+        query_income = f'''SELECT * FROM `{BI_PROJECT_ID}.report_rc.sp_income_released`
                            WHERE (DATE(order_creation_time) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)'''
 
-        query_wallet = f'''SELECT * FROM `bi-gbq.report_rc.sp_pay_wallet`
+        query_wallet = f'''SELECT * FROM `{BI_PROJECT_ID}.report_rc.sp_pay_wallet`
                            WHERE (DATE(transaction_date) BETWEEN '{start_date}' AND '{today_date}')
                                 AND (LENGTH(order_number) > 1)
                             ORDER BY transaction_date DESC'''
@@ -360,13 +360,13 @@ def check_previous_wallet_with_no_withdrawn_at_all_in_month(report_month,folder_
 
     query = f'''WITH all_month_wallet AS (
         SELECT DISTINCT month_wallet
-        FROM `bi-gbq.report_rc.sp_pay_wallet`
+        FROM `{BI_PROJECT_ID}.report_rc.sp_pay_wallet`
         WHERE folder_id = '{folder_id}'
         AND month_wallet IN {tuple(prev_month_list)}
     ),
     month_with_penarikan_dana AS (
         SELECT DISTINCT month_wallet, 'Yes' AS penarikan_dana_flag
-        FROM `bi-gbq.report_rc.sp_pay_wallet`
+        FROM `{BI_PROJECT_ID}.report_rc.sp_pay_wallet`
         WHERE folder_id = '{folder_id}'
         AND LOWER(description) LIKE '%penarikan dana%'
     )
@@ -435,12 +435,12 @@ def withdrawn_last_month(report_month,folder_id):
     query = f'''
         WITH order_income AS (
             SELECT *
-            FROM `bi-gbq.report_rc.rpt_sp_journal_order` AS income_data
+            FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_order` AS income_data
             WHERE month_income IN {tuple(before_this_month_included)}
             AND folder_id = '{folder_id}'
             AND EXISTS (
                 SELECT 1
-                FROM `bi-gbq.report_rc.rpt_sp_journal_base` AS order_data
+                FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base` AS order_data
                 WHERE order_data.folder_id = '{folder_id}'
                     AND order_data.order_number = income_data.order_number
                     AND order_data.month_order IN {tuple(before_this_month_excluded)}
@@ -451,7 +451,7 @@ def withdrawn_last_month(report_month,folder_id):
         wallet_data AS (
             SELECT folder_id, order_number, wp_has_been_withdrawn, wp_this_month_order, wp_described_as_income,
                     sheet_omset, sheet_wp, sheet_piutang
-            FROM `bi-gbq.report_rc.rpt_sp_journal_base`
+            FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base`
             WHERE {month_wallet_condition}
             AND wp_described_as_income = 1
             AND folder_id = '{folder_id}'
@@ -490,14 +490,14 @@ def withdrawn_last_month(report_month,folder_id):
     # Previous month data already refund to customer in Income Data, but has never been showing in Wallet Data
 
     query_add = f'''SELECT *
-                FROM `bi-gbq.report_rc.rpt_sp_journal_order` AS income_data
+                FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_order` AS income_data
                 WHERE month_income >= '{report_month}'
                 AND folder_id = '{folder_id}'
                 AND i_total_income = 0
                 AND month_wallet is null
                 AND EXISTS (
                     SELECT 1
-                    FROM `bi-gbq.report_rc.rpt_sp_journal_base` AS order_data
+                    FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base` AS order_data
                     WHERE order_data.folder_id = '{folder_id}'
                         AND order_data.order_number = income_data.order_number
                         AND order_data.month_order IN {tuple(before_this_month_excluded)}
@@ -551,7 +551,7 @@ def withdrawn_last_month(report_month,folder_id):
 
     # Arrange Column Order
 
-    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
+    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,f'SELECT * FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base` LIMIT 1')
 
     df_filtered = df_concat_again[journal_base_raw_col_list.columns.tolist()]
 
@@ -574,7 +574,7 @@ def pending_last_month(report_month,folder_id,month_col_ref):
         month_wallet_condition = f"month_wallet IN {tuple(month_list)}"
 
     # Check whether in the report_month there is a withdrawal activity
-    count_withdrawal = read_from_gbq(BI_CLIENT,f'''SELECT count(1) FROM `bi-gbq.report_rc.rpt_sp_journal_base`
+    count_withdrawal = read_from_gbq(BI_CLIENT,f'''SELECT count(1) FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base`
     WHERE month_wallet = '{report_month}' AND folder_id = '{folder_id}'
     AND LOWER(w_description) LIKE '%penarikan dana%' ''')
 
@@ -586,7 +586,7 @@ def pending_last_month(report_month,folder_id,month_col_ref):
     else:
         additional_conditions = ''
     
-    query = f'''SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base`
+    query = f'''SELECT * FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base`
                 WHERE ({month_wallet_condition})
                       AND (wp_has_been_withdrawn = 0)
                       AND (folder_id = '{folder_id}')
@@ -620,10 +620,10 @@ def pending_last_month(report_month,folder_id,month_col_ref):
     time.sleep(1)
 
     query_try_income = f'''SELECT * 
-                            FROM `bi-gbq.report_rc.sp_income_released` AS i
+                            FROM `{BI_PROJECT_ID}.report_rc.sp_income_released` AS i
                             WHERE EXISTS (
                                 SELECT 1
-                                FROM `bi-gbq.data_stage.rc_order_ref_search_income` AS r
+                                FROM `{BI_PROJECT_ID}.data_stage.rc_order_ref_search_income` AS r
                                 WHERE i.folder_id = r.folder_id
                                 AND i.order_number = r.order_number
                             )
@@ -643,7 +643,7 @@ def pending_last_month(report_month,folder_id,month_col_ref):
 
     # Arrange Column Order
 
-    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,'SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base` LIMIT 1')
+    journal_base_raw_col_list = read_from_gbq(BI_CLIENT,f'SELECT * FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base` LIMIT 1')
 
     df_filtered = df_not_null[journal_base_raw_col_list.columns.tolist()]
 
@@ -680,7 +680,7 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     print(f"\033[1;32m📊 Journal Dashboard for : {folder_id}, month = {report_month} 📊\033[0m")
 
-    query = f'''SELECT * FROM `bi-gbq.report_rc.rpt_sp_journal_base`
+    query = f'''SELECT * FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_base`
                 WHERE report_month = '{report_month}' AND folder_id = '{folder_id}'
             '''
 
@@ -796,7 +796,7 @@ def create_journal_dashboard(report_month,folder_id,db_method='append'):
 
     map_date = read_from_gbq(BI_CLIENT,f'''SELECT CONCAT(folder_id,order_number) AS uq_id,month_order,month_income,month_wallet,
                                                     o_order_creation_time, i_fund_release_date, w_transaction_date
-                                            FROM `bi-gbq.report_rc.rpt_sp_journal_order_transform`
+                                            FROM `{BI_PROJECT_ID}.report_rc.rpt_sp_journal_order_transform`
                                             WHERE folder_id = '{folder_id}' AND month_order IN {tuple(before_this_month_included)}
                                             ''')
     map_date = map_date.drop_duplicates(subset=['uq_id'])
