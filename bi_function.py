@@ -80,8 +80,10 @@ def write_table_by_unique_id(df, target_table, write_method, unique_col_ref, dat
 
         df_temp = df.copy()
 
-        for i in unique_col_ref:
-            df_temp[i] = df_temp[i].str.upper()
+        for col_name in unique_col_ref:
+            if col_name in df_temp.columns:
+                if df_temp[col_name].dtype == 'object':
+                    df_temp[col_name] = df_temp[col_name].str.upper()
 
         if date_col_ref:
 
@@ -92,14 +94,15 @@ def write_table_by_unique_id(df, target_table, write_method, unique_col_ref, dat
             df_temp[date_col_ref] = pd.to_datetime(df_temp[date_col_ref])
             
             conditions = " AND ".join(
-                [f"UPPER(target.{col}) = UPPER(temp.{col})" for col in unique_col_ref] + 
+                [f"UPPER(CAST(target.{col} AS STRING)) = UPPER(CAST(temp.{col} AS STRING))" for col in unique_col_ref] + 
                 [f"DATE(target.{date_col_ref}) = DATE(temp.{date_col_ref})"]
             )
+
         else:
             df_temp = df_temp[unique_col_ref].drop_duplicates()
 
             conditions = " AND ".join(
-                [f"UPPER(target.{col}) = UPPER(temp.{col})" for col in unique_col_ref]
+                [f"UPPER(CAST(target.{col} as STRING)) = UPPER(CAST(temp.{col} as STRING))" for col in unique_col_ref]
             )
 
         # Load Temporary Table
