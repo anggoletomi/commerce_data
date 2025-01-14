@@ -108,6 +108,7 @@ def sp_order_data(count_file,target_table,db_method,data_path,store_dim):
                     'seller_discount_package','shopee_coin_deduction','credit_card_discount','buyer_paid_shipping_cost',
                     'estimated_shipping_deduction','return_shipping_cost','total_payment','estimated_shipping_cost']:
                 df[f] = df[f].str.replace('.','')
+                df[f] = df[f].replace('err', np.nan)
                 df[f] = df[f].astype(float)
 
         except Exception as e:
