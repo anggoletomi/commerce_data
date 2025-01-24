@@ -1,0 +1,34 @@
+IF ACC['LOGINMETHOD'] <> $'''Reg''' THEN
+    MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''Log In dengan Akun Utama/Sub Akun''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+    WAIT (WebAutomation.WaitForWebPageContent.WebPageToNotContainText BrowserInstance: Browser Text: $'''Log In dengan Akun Utama/Sub Akun''')
+    WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Pilih Akun''')
+    MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''viverecollection:fahdfaikar''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+    WAIT (WebAutomation.WaitForWebPageContent.WebPageToNotContainText BrowserInstance: Browser Text: $'''Pilih Akun''')
+ELSE
+    MouseAndKeyboard.MoveMouseToImage.ClickImage Images: [imgrepo['USERNAME']] SearchForImageOn: MouseAndKeyboard.SearchTarget.ForegroundWindow MousePositionOnImage: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 Tolerance: 10 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Occurence: 1 Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClick: 0 SearchAlgorithm: MouseAndKeyboard.ImageFinderAlgorithm.Legacy X=> X Y=> Y
+    MouseAndKeyboard.SendKeys.FocusAndSendKeys TextToSend: ACC['Username'] DelayBetweenKeystrokes: 20 SendTextAsHardwareKeys: False
+    WAIT 1
+    MouseAndKeyboard.SendKeys.FocusAndSendKeys TextToSend: $'''{Tab}''' DelayBetweenKeystrokes: 20 SendTextAsHardwareKeys: False
+    MouseAndKeyboard.SendKeys.FocusAndSendKeys TextToSend: ACC['Password'] DelayBetweenKeystrokes: 20 SendTextAsHardwareKeys: False
+    WAIT 1
+    MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''LOG IN''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+    WAIT (WebAutomation.WaitForWebPageContent.WebPageToNotContainText BrowserInstance: Browser Text: $'''LOG IN''')
+END
+LABEL RETRY_HOME_PAGE
+WebAutomation.GoToWebPage.GoToWebPage BrowserInstance: Browser Url: $'''https://seller.shopee.co.id/''' WaitForPageToLoadTimeout: 60
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Pesanan''') 
+    ON ERROR
+        GOTO RETRY_HOME_PAGE
+    END
+
+# [ControlRepository][PowerAutomateDesktop]
+
+{
+  "ControlRepositorySymbols": [],
+  "ImageRepositorySymbol": {
+    "Repository": "{\r\n  \"Folders\": [],\r\n  \"Images\": [\r\n    {\r\n      \"Id\": \"fdb163df-ba76-482b-844c-f3cc69953cf4\",\r\n      \"Name\": \"USERNAME\",\r\n      \"Screenshot\": \"iVBORw0KGgoAAAANSUhEUgAAAIAAAAAeCAYAAADkUhb4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAASaSURBVGhD7Zhxb5s8EMbf7/+dKIqyooz1RRmiY1mKVl6UilJeGjGajlDy7M42iUlbLe3S/VH8kyLFNTn77h7O5/4Dw6AxAhg4RgADxwhg4BgBDBwjgIFjBDBwjAAGjhHAwDECGDhGAAPHCOCdkJ9bsM5zNTqcFwigRDSeIF7R11WMiRXg0XI3Aayn/v6OKS/GmMigIJ5QEqzHn+BGPntcGlR5jqqRo7cXQDGD/SlBzd+NACSbAjP7DMlPHkgBSDH8DQqEJxa8K5GRtxcALzBNWzkwApCwv59TyKj8bQH0+SMB1FkI11Yl64OPpFKJ7nhI4Z/4SB/U+EAB9OyOXMxzVa+YZonYH8s5y4b7LUezkVOreAJrOkf0r721xw5O5gnm7kj+5mSMIJXqF/zMEHZzbC/MUO/Z265Hv/UXFVba/mwnQCreZAXb+8jrq+eTSiW6o0XqW/C7l+K3AsgRWBOEl9qaH+coVlocTkbwoiUVd8WmRha6GNGbLp8PkW33yPZ2x8urBdDmIUaWi+8/yJFNi2oxhW1T0LtkE/XC6xs/RAD3MVxyWNilYNXXAa2jlUvXwuickkTTbV1grgVPJMxyEF6VWNWNCLxwcOQhLmq0bYPy0pVriSQvMR9ZcC9LtDxeZwho7C2kQKQ98rEkW52PHFAvRtm0aJsKiUf2ffU2P+QINXvt3QJT26Zgi1lJvYC3XZ95pgeYxDTDyIQJnym2nc/s5+yGfaIY5TM4NI4q8QMsv5Gg3e8oORebBtk5jb2FPIaPJYD0s4XxRamGDDd7FsKtrRrJJxuzQg2ZQwQgAjSCHxeo1hy4GuV1hpIFUEYYW9NdRSHadErOymCJhAWZnFCICnCpIsOIPaimlJLasFC2yegHRNjrBacfPEY8o5Il9jKOKBI7uNmzvuxs1MkZ7K+9oBxUAfRpfU1Jf1/tukajxahfYY8kgCdVqxlGFcHZC4YM/m8EQDTVAnNvIkuY7ZAYVHkTzz1eswvG44RJB3vB1QVANHkEz1Elu/u8UgDiu26n+2xtVIhOx4j6QTm6ALDOEXmOqFa7fRxZAAsqfc9vmvPvwOlqUoco7/sBkG9F9+a0dwWy/3fnZnuXUEVQleWWbhTsiPbG6rxYAKLaUCnNqZQqm39SAcSR10vMHvxSnEYkA51jC6AG58b5mosjQ/AWFaDhctedrfQHPpsin5qNNU8vtWuOjtyc5UYo7uW5WhcxPD43/1PuUJK5t4huZUsjBUBHyS0NNnTMnJJzXzJU4nyjc/kqgE8lnvfwYgEIQSoBPDRYlQl82strBYAmxZSOL4+OL+5RKCgoIh9hJn1ZzmycJVoDKji2AMge9UlSAHTE3ZdIfG5yjywA8g6ra+pMOWBkUJTqruPV7/77tKteh8pdfnDV75TFLUC32x0BzJq73115G7lz5EJ0TyVMOvisAIhq4WOs9sK2ooCOA3VFe7EAiHbVv1U4fgJxOerd/XWkAOTz/Y/c90sFQFDz6X9QdvgWdRFQvLre6WgCeI79a46BaVN/d1t4Bxz+n0DDu8QIYOAYAQwcI4CBYwQwcIwABo4RwKABfgGhe8sSlxKR8gAAAABJRU5ErkJggg==\",\r\n      \"ScreenshotPath\": \"imageRepo-screenshots\\\\ae377bae-d4e9-4147-9414-2fdb095dc3b9.png\"\r\n    }\r\n  ],\r\n  \"Version\": 1\r\n}",
+    "ImportMetadata": {},
+    "Name": "imgrepo"
+  },
+  "ConnectionReferences": []
+}

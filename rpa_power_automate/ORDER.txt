@@ -1,0 +1,33 @@
+SET TASK TO $'''ORDER'''
+WebAutomation.GoToWebPage.GoToWebPage BrowserInstance: Browser Url: $'''https://seller.shopee.co.id/portal/sale/order''' WaitForPageToLoadTimeout: 60
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Lihat Rincian Pengiriman''') FOR 5 
+    ON ERROR
+
+    END
+MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''Export''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Periode Tanggal''') FOR 5 
+    ON ERROR
+
+    END
+MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: FormattedDateTime IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+WAIT 1
+**REGION TO EDIT EACH MONTH
+MouseAndKeyboard.SendMouseClick.ClickAt ClickType: MouseAndKeyboard.MouseClickType.LeftClick MillisecondsDelay: 0 X: 733 Y: 445 RelativeTo: MouseAndKeyboard.PositionRelativeTo.Screen MovementStyle: MouseAndKeyboard.MovementStyle.Instant
+**ENDREGION
+DISABLE MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnSubregionOfScreenWithWindowsOcr TextToFind: 1 IsRegEx: True WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 X1: 640 Y1: 385 X2: 900 Y2: 460 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: LAST_EOM_DAY IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 1 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''Export''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 2 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Laporan Terakhir''') FOR 5 
+    ON ERROR
+
+    END
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToNotContainText BrowserInstance: Browser Text: $'''Sedang Diproses''') 
+    ON ERROR
+
+    END
+MouseAndKeyboard.MoveMouseToTextOnScreenWithOCR.WaitForTextToAppearAndClickTextOnScreenWithWindowsOcr TextToFind: $'''Download''' IsRegEx: False WindowsOcrLanguage: MouseAndKeyboard.WindowsOcrLanguage.English Occurence: 2 SearchForTextOn: MouseAndKeyboard.SearchTarget.ForegroundWindow ImageWidthMultiplier: 1 ImageHeightMultiplier: 1 MovementStyle: MouseAndKeyboard.MovementStyle.Instant Timeout: 5 ClickType: MouseAndKeyboard.ClickType.LeftClick SecondsBeforeClicking: 1 PositionRelativeToText: MouseAndKeyboard.PositionOnImage.MiddleCenter OffsetX: 0 OffsetY: 0 X=> LocationOfTextFoundX Y=> LocationOfTextFoundY Width=> WidthOfTextFound Height=> HeightOfTextFound
+WAIT (WebAutomation.WaitForWebPageContent.WebPageToContainText BrowserInstance: Browser Text: $'''Telah didownload''') FOR 5 
+    ON ERROR
+
+    END
+CALL 'FILE OPERATION'

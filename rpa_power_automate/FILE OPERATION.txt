@@ -1,0 +1,21 @@
+SET FILE_WAIT TO 0
+LOOP WHILE (Files.Count) < (1)
+    WAIT 1
+    Folder.GetFiles Folder: PATH_DEF_DOWNLOAD_FOLDER FileFilter: $'''*.xlsx;*.xls;*.csv''' IncludeSubfolders: False FailOnAccessDenied: True SortBy1: Folder.SortBy.NoSort SortDescending1: False SortBy2: Folder.SortBy.NoSort SortDescending2: False SortBy3: Folder.SortBy.NoSort SortDescending3: False Files=> FILES
+    IF file_wait >= 60 THEN
+        EXIT LOOP
+    END
+    Variables.IncreaseVariable Value: FILE_WAIT IncrementValue: 1
+END
+WAIT 1
+SWITCH TASK
+    CASE = $'''ORDER'''
+        File.Move Files: FILES Destination: $'''%PATH_DEF_ORDER%%ACC['BRANDID']%''' IfFileExists: File.IfExists.Overwrite MovedFiles=> MovedFiles
+    CASE = $'''INCOME'''
+        File.Move Files: FILES Destination: $'''%PATH_DEF_INCOME%%ACC['BRANDID']%''' IfFileExists: File.IfExists.Overwrite MovedFiles=> MovedFiles
+    CASE = $'''WALLET'''
+        File.Move Files: FILES Destination: $'''%PATH_DEF_WALLET%%ACC['BRANDID']%''' IfFileExists: File.IfExists.Overwrite MovedFiles=> MovedFiles
+END
+Variables.ClearList List: Files
+Variables.ClearList List: RenamedFiles
+Variables.ClearList List: MovedFiles
